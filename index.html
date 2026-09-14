@@ -137,7 +137,28 @@
   }
   .btn-quiet:hover{color:var(--gold);border-color:var(--gold-dim)}
 
-  /* ---------------- settings ---------------- */
+  /* ---------------- the finished run ----------------
+   A completed test stays on the result screen when they come back.
+   Only Reset clears it. */
+
+const RUN_KEY = "ash-queen-run";
+
+function saveRun(wasWight){
+  try{
+    localStorage.setItem(RUN_KEY, JSON.stringify({ picks, age, wight: !!wasWight }));
+  }catch(e){}
+}
+
+function loadRun(){
+  try{ return JSON.parse(localStorage.getItem(RUN_KEY) || "null"); }
+  catch(e){ return null; }
+}
+
+function clearRun(){
+  try{ localStorage.removeItem(RUN_KEY); }catch(e){}
+}
+
+/* ---------------- settings ---------------- */
 
   .cog{
     position:absolute;
@@ -509,6 +530,110 @@
   .tally-row.win{color:var(--gold)}
   .tally-row.win .tally-fill{background:var(--gold)}
 
+  /* ---------------- other vessels ---------------- */
+
+  .others{
+    margin-top:36px;
+    padding-top:26px;
+    border-top:1px solid var(--gold-faint);
+  }
+  .others[hidden]{display:none}
+  .others h3{
+    font-family:Cinzel,Georgia,serif;
+    font-size:clamp(14px,2.4vw,17px);
+    font-weight:700;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin:0 0 14px;
+  }
+  .gap-note{
+    color:var(--muted);
+    font-size:14px;
+    margin:0 0 22px;
+    max-width:60ch;
+  }
+
+  /* ---------------- the footer of the result ---------------- */
+
+  .result-actions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    margin-top:36px;
+    padding-top:24px;
+    border-top:1px solid var(--gold-faint);
+  }
+
+  /* deliberately dimmer than the others - it throws the run away */
+  .btn-dark{
+    font-family:Cinzel,Georgia,serif;
+    font-size:11.5px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    padding:9px 18px;
+    color:#6b626e;
+    background:#090909;
+    border:1px solid #241f26;
+    margin-left:auto;
+    transition:color .14s,border-color .14s;
+  }
+  .btn-dark:hover{color:var(--text);border-color:#4a434c}
+
+  /* ---------------- the vessel gallery ---------------- */
+
+  .vessel{
+    display:flex;
+    gap:18px;
+    align-items:flex-start;
+    padding:24px 0;
+    border-bottom:1px solid var(--gold-faint);
+  }
+  .vessel:last-child{border-bottom:none}
+  .vessel img{
+    width:78px;
+    max-height:78px;
+    object-fit:contain;
+    flex:none;
+  }
+  .vessel-copy{flex:1 1 220px;min-width:0}
+  .vessel h3{
+    font-family:Cinzel,Georgia,serif;
+    font-size:16px;
+    letter-spacing:.05em;
+    text-transform:uppercase;
+    color:var(--gold);
+    margin:0 0 9px;
+    overflow-wrap:break-word;
+  }
+  .vessel p{color:var(--muted);font-size:14px;margin:0 0 .85em}
+  .vessel p:last-child{margin-bottom:0}
+
+  /* ---------------- the answer sheet ---------------- */
+
+  .answer-row{
+    display:grid;
+    grid-template-columns:30px 1fr auto;
+    gap:12px;
+    align-items:baseline;
+    padding:10px 0;
+    border-bottom:1px solid var(--gold-faint);
+  }
+  .answer-n{
+    color:var(--muted);
+    font-size:12px;
+    font-variant-numeric:tabular-nums;
+  }
+  .answer-q{color:var(--text);font-size:14px;min-width:0}
+  .answer-a{
+    color:var(--gold);
+    font-size:12px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    text-align:right;
+  }
+
   @media (prefers-reduced-motion:reduce){
     .selector-art.wind,.selector-art.land{animation:none}
     *{transition-duration:.01ms !important}
@@ -530,6 +655,10 @@
     .step.on{border-color:var(--gold-dim)}
     .step-label{font-size:14px;text-align:left}
     .selector{width:40px;height:50px}
+    .answer-row{grid-template-columns:24px 1fr;gap:8px}
+    .answer-a{grid-column:2;text-align:left;margin-top:2px}
+    .btn-dark{margin-left:0;width:100%;text-align:center}
+    .vessel img{width:58px;max-height:58px}
     .tally-row{grid-template-columns:24px 1fr auto;gap:9px}
     .tally-icon{width:24px;height:24px}
     .tally-track{display:none}
@@ -631,6 +760,17 @@
       </div>
     </section>
 
+    <!-- ===================== AGE ===================== -->
+    <section class="screen" id="s-age">
+      <div class="challenge">
+        <p class="challenge-q">Before you begin: are you above or below 18?</p>
+      </div>
+      <div class="challenge-row">
+        <button class="btn" id="age-over">18 or over</button>
+        <button class="btn-quiet" id="age-under">Under 18</button>
+      </div>
+    </section>
+
     <!-- ===================== THE CHALLENGE ===================== -->
     <section class="screen" id="s-check">
       <div class="challenge">
@@ -656,8 +796,37 @@
       <div id="verdict-folly"></div>
       <div id="verdict-shadow"></div>
 
-      <div class="tally" id="tally"></div>
-      <button class="btn" id="again">Take it again</button>
+      <section class="others" id="others">
+        <h3>Other potential Vessels</h3>
+        <p class="gap-note" id="gap-note"></p>
+        <div class="tally" id="tally"></div>
+      </section>
+
+      <div class="result-actions">
+        <button class="btn-quiet" id="see-vessels">See other vessels</button>
+        <button class="btn-quiet" id="see-answers">See my answers</button>
+        <button class="btn-dark" id="reset">Reset</button>
+      </div>
+    </section>
+
+    <!-- ===================== ALL VESSELS ===================== -->
+    <section class="screen" id="s-vessels">
+      <h1>Other Vessels</h1>
+      <div class="rule"></div>
+      <div id="vessel-list"></div>
+      <div class="result-actions">
+        <button class="btn-quiet" id="vessels-back">Back to my result</button>
+      </div>
+    </section>
+
+    <!-- ===================== MY ANSWERS ===================== -->
+    <section class="screen" id="s-answers">
+      <h1>My Answers</h1>
+      <div class="rule"></div>
+      <div id="answer-list"></div>
+      <div class="result-actions">
+        <button class="btn-quiet" id="answers-back">Back to my result</button>
+      </div>
     </section>
 
   </div>
@@ -884,6 +1053,7 @@ const TRAITS = {
    --------------------------------------------------------------------- */
 const WIGHT = {
   label: "The Woe-Begotten Wight",
+  image: "the_wight.png",
   accent: "#ffffff",
   body: [
     "A Woe-Begotten Wight is a creature born from uncertainty, dishonesty, and a soul that refuses to take shape. It is neither one thing nor another, bearing only a mishapened form where a true identity ought to be.",
@@ -1046,11 +1216,16 @@ const QUESTIONS = [
 const $ = id => document.getElementById(id);
 
 const screens = {
-  start:  $("s-start"),
-  quiz:   $("s-quiz"),
-  check:  $("s-check"),
-  result: $("s-result")
+  start:   $("s-start"),
+  age:     $("s-age"),
+  quiz:    $("s-quiz"),
+  check:   $("s-check"),
+  result:  $("s-result"),
+  vessels: $("s-vessels"),
+  answers: $("s-answers")
 };
+
+let age = null;          /* answered once, before the statements */
 
 const stepsEl = $("steps");
 const selector = $("selector");
@@ -1103,6 +1278,27 @@ function useAccent(hex){
   root.style.setProperty("--gold-dim",
     "rgb(" + Math.round(r * .72) + "," + Math.round(g * .72) + "," + Math.round(b * .72) + ")");
   root.style.setProperty("--gold-faint", "rgba(" + r + "," + g + "," + b + ",.34)");
+}
+
+/* ---------------- the finished run ----------------
+   A completed test stays on the result screen when they come back.
+   Only Reset clears it. */
+
+const RUN_KEY = "ash-queen-run";
+
+function saveRun(wasWight){
+  try{
+    localStorage.setItem(RUN_KEY, JSON.stringify({ picks, age, wight: !!wasWight }));
+  }catch(e){}
+}
+
+function loadRun(){
+  try{ return JSON.parse(localStorage.getItem(RUN_KEY) || "null"); }
+  catch(e){ return null; }
+}
+
+function clearRun(){
+  try{ localStorage.removeItem(RUN_KEY); }catch(e){}
 }
 
 /* ---------------- settings ---------------- */
@@ -1414,6 +1610,25 @@ function tally(){
   return out;
 }
 
+/* "Sonic, The Messenger" -> "Sonic" */
+function shortName(label){ return label.split(",")[0].trim(); }
+
+/* how decisive the result was, in plain words */
+function gapNote(winId, runnerId, gap){
+  const won = shortName(TRAITS[winId].label);
+  const near = shortName(TRAITS[runnerId].label);
+  const by = gap.toFixed(1) + "%";
+
+  if (gap > 5)
+    return "You align with " + won + " far more closely than with any other. " +
+           "The nearest, " + near + ", trails by " + by + ".";
+
+  if (gap >= 2.5)
+    return "You lean one way, though not heavily. " + near + " is right behind by only " + by + ".";
+
+  return "A result, but only just. " + near + " came within " + by + " of taking it instead.";
+}
+
 function paragraphsInto(box, list){
   box.textContent = "";
   (list || []).forEach(text => {
@@ -1478,20 +1693,24 @@ function finish(special){
     shadowBox.appendChild(wrap);
   }
 
-  /* the Wight is not a score - it gets no bars to sit beside */
+  /* the Wight is not a score - it stands with no others beside it */
+  const others = $("others");
   const box = $("tally");
   box.textContent = "";
-  box.hidden = !SHOW_TALLY || !!special;
+  others.hidden = !SHOW_TALLY || !!special;
 
   if (SHOW_TALLY && !special){
-    const winId = special ? null : winner;   /* the Wight wins nothing on the scale */
+    const ranked = ids.slice().sort((a, b) => score[b] - score[a]);
+    const runnerUp = ranked[1];
 
-    ids.slice()
-       .sort((a, b) => score[b] - score[a])
-       .slice(0, TALLY_TOP)
-       .forEach(id => {
+    $("gap-note").textContent = runnerUp
+      ? gapNote(ranked[0], runnerUp, (score[ranked[0]] - score[runnerUp]) * 100)
+      : "";
+
+    /* the winner is named above - these are the ones it nearly was */
+    ranked.slice(1, 1 + TALLY_TOP).forEach(id => {
       const row = document.createElement("div");
-      row.className = "tally-row" + (id === winId ? " win" : "");
+      row.className = "tally-row";
 
       /* the little face beside each name */
       const icon = document.createElement("span");
@@ -1524,7 +1743,76 @@ function finish(special){
   }
 
   standing.hidden = true;
+  saveRun(special === WIGHT);
   show("result");
+}
+
+/* ---------------- the other screens ---------------- */
+
+function renderVessels(){
+  const list = $("vessel-list");
+  list.textContent = "";
+
+  Object.keys(TRAITS).map(id => TRAITS[id]).concat([WIGHT]).forEach(v => {
+    const row = document.createElement("div");
+    row.className = "vessel";
+
+    if (v.image){
+      const im = document.createElement("img");
+      im.alt = "";
+      im.onerror = () => im.remove();
+      im.src = asset(v.image);
+      row.appendChild(im);
+    }
+
+    const copy = document.createElement("div");
+    copy.className = "vessel-copy";
+
+    const h = document.createElement("h3");
+    h.textContent = v.label;
+    copy.appendChild(h);
+
+    (v.body || []).forEach(text => {
+      const p = document.createElement("p");
+      p.textContent = text;
+      copy.appendChild(p);
+    });
+
+    row.appendChild(copy);
+    list.appendChild(row);
+  });
+}
+
+function renderAnswers(){
+  const list = $("answer-list");
+  list.textContent = "";
+
+  const line = (n, q, a) => {
+    const row = document.createElement("div");
+    row.className = "answer-row";
+
+    const num = document.createElement("span");
+    num.className = "answer-n";
+    num.textContent = n;
+
+    const text = document.createElement("span");
+    text.className = "answer-q";
+    text.textContent = q;
+
+    const ans = document.createElement("span");
+    ans.className = "answer-a";
+    ans.textContent = a;
+
+    row.append(num, text, ans);
+    list.appendChild(row);
+  };
+
+  if (age) line("-", "Are you above or below 18?", age);
+
+  QUESTIONS.forEach((item, i) => {
+    const pick = picks[i];
+    line(i + 1, item.q, pick === undefined ? "-" : scaleOf(item)[pick]);
+  });
 }
 
 /* ---------------- input ---------------- */
@@ -1623,12 +1911,41 @@ $("begin").addEventListener("click", () => {
   unlockAudio();
   musicWanted = true;        // a real gesture: browsers will allow audio now
   applyMusic();
-  start();
+  show("age");
 });
+
+function answerAge(value){
+  age = value;
+  start();
+}
+
+$("age-over").addEventListener("click", () => answerAge("18 or over"));
+$("age-under").addEventListener("click", () => answerAge("Under 18"));
 $("back").addEventListener("click", back);
 $("say-yes").addEventListener("click", () => answerChallenge(true));
 $("say-no").addEventListener("click", () => answerChallenge(false));
-$("again").addEventListener("click", start);
+$("see-vessels").addEventListener("click", () => { renderVessels(); show("vessels"); });
+$("see-answers").addEventListener("click", () => { renderAnswers(); show("answers"); });
+$("vessels-back").addEventListener("click", () => show("result"));
+$("answers-back").addEventListener("click", () => show("result"));
+
+$("reset").addEventListener("click", () => {
+  clearRun();
+  picks = [];
+  age = null;
+  index = 0;
+  useAccent(null);
+  standing.hidden = true;
+  show("start");
+});
+
+/* a finished run comes back to the result until it is reset */
+const saved = loadRun();
+if (saved && Array.isArray(saved.picks) && saved.picks.length === QUESTIONS.length){
+  picks = saved.picks;
+  age = saved.age || null;
+  finish(saved.wight ? WIGHT : null);
+}
 </script>
 </body>
 </html>
