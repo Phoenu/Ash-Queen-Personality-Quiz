@@ -526,10 +526,19 @@
 
     <!-- ===================== SETTINGS ===================== -->
     <button class="cog" id="cog" aria-label="Settings" aria-expanded="false">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
-        <circle cx="12" cy="12" r="3.2"/>
-        <path d="M12 2.6v3M12 18.4v3M2.6 12h3M18.4 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"
-              stroke-linecap="round"/>
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <g fill="currentColor">
+          <rect x="10.85" y="1.6" width="2.3" height="4.6" rx=".7"/>
+          <rect x="10.85" y="1.6" width="2.3" height="4.6" rx=".7" transform="rotate(45 12 12)"/>
+          <rect x="10.85" y="1.6" width="2.3" height="4.6" rx=".7" transform="rotate(90 12 12)"/>
+          <rect x="10.85" y="1.6" width="2.3" height="4.6" rx=".7" transform="rotate(135 12 12)"/>
+          <rect x="10.85" y="1.6" width="2.3" height="4.6" rx=".7" transform="rotate(180 12 12)"/>
+          <rect x="10.85" y="1.6" width="2.3" height="4.6" rx=".7" transform="rotate(225 12 12)"/>
+          <rect x="10.85" y="1.6" width="2.3" height="4.6" rx=".7" transform="rotate(270 12 12)"/>
+          <rect x="10.85" y="1.6" width="2.3" height="4.6" rx=".7" transform="rotate(315 12 12)"/>
+        </g>
+        <circle cx="12" cy="12" r="6.1" fill="none" stroke="currentColor" stroke-width="2.2"/>
+        <circle cx="12" cy="12" r="2.2" fill="none" stroke="currentColor" stroke-width="1.6"/>
       </svg>
     </button>
 
@@ -735,14 +744,56 @@ const TRAITS = {
     label: "Tails, The Blacksmith/Merchant",
     image: "The_blacksmith.png",
     accent: "#efc523",
-    body: ["Description not yet written."]
+    body: [
+      "The Blacksmith and Merchant are the backbones of a kingdom: forging the tools and weapons that keep its people alive, and moving the goods that keep its cities supplied. They are the hands that turn raw materials into something useful and ensure that what the kingdom needs reaches those who depend upon it. From simple tools and sturdy blades to more specialized works commissioned by the Crown, their craft finds purpose wherever the kingdom requires it.",
+
+      "You’re the kind of person who works with what others overlook, whether shaping iron into a blade or turning a simple trade into something that benefits an entire community. Your work may seem mundane compared to knights or Alchemists, but kingdoms are built upon those who create, supply, and maintain them. A blacksmith who refuses to experiment will keep producing flawed blades, while a merchant who never seeks something new will have nothing better to offer. When the Queen requires weapons, goods, or something more macabre from your workshop, you are expected to provide it. The strength of a kingdom relies upon the hands that arm it, and the Queen will not accept failure when its strength is at stake."
+    ],
+    lead: "But those who shape the economy and supply the kingdom must always wonder:",
+    folly: "If you keep doing the same old things, how will your work ever prosper?",
+    shadow: {
+      title: "The Shadow of your soul",
+      text: [
+        "The greatest danger of a Blacksmith or a Merchant is believing that effort, value, and success can be separated from Responsibility and Creativity.",
+
+        "An unhealthy one may become lazy, avoiding the effort required to create something worthwhile, maintain what they have built, or earn their place through honest work. Why struggle when someone else can carry the burden? Over time, that mindset can turn simple negligence into dependence, leaving them unwilling to put forth any effort unless there is something immediate to gain.",
+
+        "Uncreative thinking can become another weakness. You may cling to what is familiar simply because it is comfortable, repeating the same habits and following the same patterns rather than challenging yourself to think differently. When faced with uncertainty, you may choose the safest answer instead of searching for a better one. Eventually, the fear of trying something new can become stronger than the desire to grow, change, or discover what you might become.",
+
+        "Worst of all is a lack of intelligence. Without the willingness to learn, understand, or improve, mistakes become lessons they never absorb. They may be easily deceived, unable to recognize their own failures, or incapable of seeing the consequences of their choices until the damage has already been done. Sometimes even beyond that they refuse to acknowledge themselves. What begins as ignorance can eventually become an unwillingness to grow.",
+
+        "The most dangerous Tradesmith isn’t the one who knows nothing. It is the one who sees no reason to learn."
+      ]
+    }
   },
 
   knuckles: {
     label: "Knuckles, The Wright",
     image: "the_wright.png",
     accent: "#cd0e0d",
-    body: ["Description not yet written."]
+    body: [
+      "The Wright is the craft of creation: shaping raw materials into the walls, structures, and living places that allow a kingdom to stand. The Wright is the one who builds what others rely upon for safety and often without ever receiving the glory for doing so.",
+
+      "You work with your hands to leave something stronger behind than what you were given. You raise walls, repair what has been broken, and create the foundations upon which others can build their lives. When the Queen demands a fortress, a bridge, or a simple trough to provide resources for her armies, you are the one expected to make it stand.",
+
+      "The strength of a kingdom is not found only in its ruler or its wealth but the people who maintain the structure of everyday life. When the Wrights fail to do their job, the walls that once provided security can begin to crumble, allowing the miasma to seep through and turn the safe haven away from the suffering outside into a tomb for the common folk."
+    ],
+    lead: "A dutiful Wright must always ask themselves one question:",
+    folly: "If everything you build is meant to protect others, who will build something to protect you?",
+    shadow: {
+      title: "The Shadow of your soul",
+      text: [
+        "The greatest danger of a Wright is believing that strength alone is enough to keep something standing.",
+
+        "An unhealthy one can become physically weak, struggling to build themselves up because the effort required feels impossible or pointless. You often struggle with the demanding work that is imposed on them both mentally and physically. You’re prone to avoiding challenges because you already expect themselves to fail, allowing weakness to become something you accept rather than overcome. The more you convince yourself that you cannot do something, the less willing you become to try.",
+
+        "Shyness is another weakness that will lead a builder to flounder. You allow others to make decisions for you, even those with poor judgement to make bad designs or dangerous orders to go unchallenged. You may know something is wrong but remain silent, leaving others to suffer because you were too afraid to stand against opposition and display their own strength. Eventually, silence becomes easier than standing up for yourself, and you may lose the courage to speak even when your voice is desperately needed.",
+
+        "Worst of all is despair. You may begin to believe that nothing you do will ever matter, that your efforts will never be enough, and that there is little reason to try. Failure becomes expected rather than feared, and eventually you stop reaching for anything at all. What begins as disappointment can become resignation, leaving you trapped in the belief that you are incapable of changing your own circumstances.",
+
+        "The most dangerous Wright isn’t the one who cannot build. It is the one who cannot build to satisfaction."
+      ]
+    }
   },
 
   eggman: {
@@ -1087,8 +1138,7 @@ function allNeutral(){
 }
 
 function afterLast(){
-  if (allNeutral()) askChallenge(0);
-  else finish();
+  askChallenge(0);          /* everyone is asked, not just the undecided */
 }
 
 /* ---------------- the challenge ---------------- */
@@ -1103,8 +1153,11 @@ function askChallenge(i){
 
 function answerChallenge(yes){
   if (!yes){ start(); return; }                        /* back to the first statement */
-  if (challengeAt < CHALLENGE.length - 1) askChallenge(challengeAt + 1);
-  else finish(WIGHT);                                  /* they stood by an empty answer */
+
+  if (challengeAt < CHALLENGE.length - 1){ askChallenge(challengeAt + 1); return; }
+
+  /* stood by their answers - but if the scale never moved, that is the Wight */
+  finish(allNeutral() ? WIGHT : null);
 }
 
 /* ---------------- scoring ---------------- */
