@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Find out what kind of poor soul you truly are.">
-<link rel="icon" href="crest.png">
+<link rel="icon" href="ash_queen_icon.png">
 <meta property="og:title" content="Ash Queen Personality Test">
 <meta property="og:description" content="Find out what kind of poor soul you truly are.">
 <meta property="og:image" content="crest.png">
@@ -60,7 +60,9 @@
     inset:0;
     background:rgba(0,0,0,.2);
   }
-  body.bg-off #quizBackground{display:none}
+  /* the Background setting hides the backdrop - unless a question has
+     insisted on its own, which is not decoration and always shows */
+  body.bg-off #quizBackground:not(.forced){display:none}
 
   /* while a result carries a scene, the plate turns translucent so the art
      reads through it. The blur keeps the text crisp over moving pictures. */
@@ -151,6 +153,28 @@
 
   /* a question may set its own line breaks rather than leave them to chance */
   .statement-line{display:block}
+
+  /* Something answers back, once, late on. Purple taken from the crowned
+     head - the border keeps the icon's own shade, the text is lifted from
+     it so a short line still reads against black. */
+  .interject{
+    margin:0 0 22px;
+    padding:12px 18px;
+    width:max-content;
+    max-width:100%;
+    border:1px solid #675972;
+    background:rgba(69,50,76,.32);
+    color:#a596b2;
+    font-family:var(--display);
+    font-size:clamp(14px,2.5vw,17px);
+    letter-spacing:.03em;
+    cursor:pointer;
+    opacity:0;
+    transform:translateY(6px);
+    transition:opacity .3s ease, transform .3s ease;
+  }
+  .interject.shown{opacity:1;transform:none}
+  .interject[hidden]{display:none}
 
   h1,h2{
     font-family:var(--display);
@@ -822,6 +846,8 @@
         <div class="steps" id="steps"></div>
       </div>
 
+      <div class="interject" id="interject" hidden></div>
+
       <div class="footer">
         <button class="btn-quiet" id="back">Back</button>
       </div>
@@ -930,6 +956,21 @@ const ASSET_VERSION = "7";
    --------------------------------------------------------------------- */
 const SOUND_HOVER = "Clicky.mp3";
 const MUSIC_TRACK = "Music.mp3";
+
+/* ---------------------------------------------------------------------
+   THE ASIDE
+   Once the first 25 questions are behind them, one of the remaining ones
+   draws a reply. Which one is chosen fresh every run, and the line is
+   picked at random from these. Never lands on a question that stands
+   alone. Empty the list to switch it off.
+   --------------------------------------------------------------------- */
+const INTERJECT_AFTER = 25;
+const INTERJECTIONS = [
+  "Interesting…",
+  "Do you truly believe that?",
+  "Your soul says otherwise.",
+  "I see differently…"
+];
 
 /* what the settings start at before anyone touches them */
 const DEFAULT_SETTINGS = { background: true, music: 40, sound: 70 };
@@ -1158,6 +1199,9 @@ const WIGHT = {
      lines   optional - render the statement on these rows instead of
              letting it wrap wherever it lands. `q` is still the text
              used for scoring and the answer sheet.
+     background
+             optional - a scene behind the plate while this question is up.
+             Always shown, whatever the Background setting says.
      mood    optional - a colour this question paints the whole plate in
      bare    optional - hide the insignia for this one
      mute    optional - the selector makes no sound on this one
@@ -1270,6 +1314,7 @@ const QUESTIONS = [
     scores: { tails: -2, knuckles: -1 },
     pin: 31,
     mood: "#8f1414",
+    background: "i_see_you.png",
     bare: true, mute: true, silent: true, solo: true, once: true },
 
   { q: "You are the reason someone stopped trying.",
@@ -1361,6 +1406,7 @@ const WIND = parseInt(getComputedStyle(document.documentElement)
 let order = [];     // the order this run asks them in
 let sealed = new Set();   // slots answered once and never offered again
 let busyGuard = null;     // releases the click lock if a move never lands
+let interjectAt = -1;     // the slot that will be answered back, this run
 let index = 0;      // current question
 let picks = [];     // picks[i] = chosen step, or undefined
 let hover = 0;      // where the selector is sitting
@@ -1402,6 +1448,39 @@ function makeOrder(){
 
 /* the question in slot i of this run */
 function qAt(i){ return QUESTIONS[order[i]]; }
+
+/* which late question gets answered back */
+function pickInterjection(){
+  const span = order.length - INTERJECT_AFTER;
+  if (span <= 0 || !INTERJECTIONS.length) return -1;
+
+  for (let tries = 0; tries < 12; tries++){
+    const slot = INTERJECT_AFTER + Math.floor(Math.random() * span);
+    if (!qAt(slot).solo) return slot;      /* never over the one that stands alone */
+  }
+  return -1;
+}
+
+/* show the aside, then carry on when it has been read or dismissed */
+function interject(done){
+  const box = $("interject");
+  box.textContent = INTERJECTIONS[Math.floor(Math.random() * INTERJECTIONS.length)];
+  box.hidden = false;
+  void box.offsetWidth;
+  box.classList.add("shown");
+
+  let over = false;
+  const close = () => {
+    if (over) return;
+    over = true;
+    clearTimeout(timer);
+    box.classList.remove("shown");
+    setTimeout(() => { box.hidden = true; done(); }, 280);
+  };
+
+  const timer = setTimeout(close, 2600);
+  box.addEventListener("click", close, { once: true });
+}
 
 function scaleOf(q){ return SCALES[q.scale || DEFAULT_SCALE]; }
 function middleOf(q){ return Math.floor(scaleOf(q).length / 2); }
@@ -1486,14 +1565,15 @@ function unrollResult(){
 }
 
 /* the scene behind the plate, for a result that carries one */
-function useBackground(url){
+function useBackground(url, force){
   const bg = $("quizBackground");
   if (url){
     bg.style.backgroundImage = "url('" + asset(url) + "')";
     bg.classList.add("has-art");
+    bg.classList.toggle("forced", !!force);   /* shown whatever the setting says */
   }else{
     bg.style.backgroundImage = "";
-    bg.classList.remove("has-art");
+    bg.classList.remove("has-art", "forced");
   }
   /* the plate reads the same flag to decide whether to turn translucent */
   document.body.classList.toggle("has-scene", !!url);
@@ -1652,6 +1732,7 @@ function start(){
   picks = [];
   sealed = new Set();
   order = makeOrder();
+  interjectAt = pickInterjection();
   useAccent(null);                    // back to gold for the questions
   useBackground(null);
   useMusic(null);
@@ -1668,6 +1749,10 @@ function render(){
   target = null;
   afterLanding = null;
   busy = false;
+
+  const aside = $("interject");
+  aside.hidden = true;
+  aside.classList.remove("shown");
 
   const item = qAt(index);
   const labels = scaleOf(item);
@@ -1689,6 +1774,9 @@ function render(){
 
   /* every mark is separate - a question may carry any of them, and any
      question without them hands the plate back as it was */
+  /* a question's own scene always shows, settings or not */
+  useBackground(item.background || null, true);
+
   if (plateEl){
     plateEl.classList.toggle("moody", !!item.mood);
     plateEl.classList.toggle("bare", !!item.bare);
@@ -1832,13 +1920,16 @@ function choose(i){
     picks[index] = i;
     if (qAt(index).once) sealed.add(index);   /* asked once, then closed */
     paint();
-    setTimeout(() => {
+    const onward = () => {
       busy = false;
       let next = index + 1;
       while (next < order.length && sealed.has(next)) next++;
       if (next < order.length){ index = next; render(); }
       else afterLast();
-    }, 150);
+    };
+
+    if (index === interjectAt) setTimeout(() => interject(onward), 220);
+    else setTimeout(onward, 150);
   };
 
   if (i === hover && !winding) commit();
