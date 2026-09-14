@@ -129,6 +129,12 @@
   .screen{display:none}
   .screen.on{display:block}
 
+  /* a question can call for silence - the frame goes stark for it */
+  .plate.hushed{
+    border-color:#ffffff;
+    transition:border-color .45s ease;
+  }
+
   h1,h2{
     font-family:var(--display);
     font-weight:700;
@@ -890,7 +896,7 @@ const ASSET_VERSION = "7";
                   nowhere else. Buttons stay silent.
      MUSIC_TRACK  loops in the background once the quiz starts.
    --------------------------------------------------------------------- */
-const SOUND_HOVER = "Menu Hover.mp3";
+const SOUND_HOVER = "Clicky.mp3";
 const MUSIC_TRACK = "Music.mp3";
 
 /* what the settings start at before anyone touches them */
@@ -1108,142 +1114,173 @@ const WIGHT = {
 };
 
 /* ---------------------------------------------------------------------
-   QUESTIONS
+   QUESTIONS - fifty of them, asked in a different order every run.
 
      q       the statement
      scores  which results it feeds, and how strongly.
              a NEGATIVE weight means agreeing counts against that result.
      scale   optional - defaults to DEFAULT_SCALE
      reverse optional - flips the whole statement
+     pin     optional - hold this one at that position (1-based) while
+             everything else is shuffled around it
+     hush    optional - the plate turns white and the music stops while
+             this one is on screen
 
-   Every result has three flaws, and every flaw gets two statements, so
-   no single answer decides anything. The tag after each line says which
-   flaw it is there to catch - keep them balanced if you add more.
+   Add or remove freely. Everything downstream follows the list.
    --------------------------------------------------------------------- */
 const QUESTIONS = [
 
-  /* ===== SONIC - lack of direction, forgetfulness, selfishness ===== */
+  { q: "Have you ever given in?",
+    scores: { knuckles: 2, sonic: 1 } },
 
   { q: "I grow restless when I have stayed in one place too long.",
-    scores: { sonic: 2 }, scale: "frequency" },                          // direction
+    scores: { sonic: 2 }, scale: "frequency" },
 
-  { q: "I keep moving because choosing a direction would make me answerable for it.",
-    scores: { sonic: 2, knuckles: 1 } },                                 // direction
-
-  { q: "I forget things people trusted me to remember.",
-    scores: { sonic: 2 }, scale: "frequency" },                          // forgetfulness
-
-  { q: "I arrive without the thing I swore I would bring.",
-    scores: { sonic: 2, tails: 1 }, scale: "frequency" },                // forgetfulness
-
-  { q: "I would walk away from people who depend on me if staying cost me too much.",
-    scores: { sonic: 2, knuckles: -1 } },                                // selfishness
-
-  { q: "I would break a promise to follow something better.",
-    scores: { sonic: 2, eggman: 1 } },                                   // selfishness
-
-  /* ===== TAILS - dull wits, clumsy hands, sloth ===== */
-
-  { q: "I am talked into things I should have seen coming.",
-    scores: { tails: 2, eggman: -1 }, scale: "frequency" },              // dull wits
-
-  { q: "I learn from a mistake only once it has cost me something.",
-    scores: { tails: 2 } },                                              // dull wits
-
-  { q: "What I make comes out worse than what I pictured.",
-    scores: { tails: 2 }, scale: "frequency" },                          // clumsy hands
-
-  { q: "Something I mended comes apart again in my hands.",
-    scores: { tails: 2, knuckles: 1 }, scale: "frequency" },             // clumsy hands
-
-  { q: "I take the easier path when I am certain no one will check.",
-    scores: { tails: 2, sonic: 1 } },                                    // sloth
-
-  { q: "I put a job down half-finished and tell myself I will return to it.",
-    scores: { tails: 2, knuckles: 1 }, scale: "frequency" },             // sloth
-
-  /* ===== KNUCKLES - weak body, shy tongue, low spirits ===== */
-
-  { q: "When work turns demanding, I find a reason to stop before it is done.",
-    scores: { knuckles: 2, tails: 1 }, scale: "frequency" },             // weak body
-
-  { q: "I expect my own strength to give out before the task does.",
-    scores: { knuckles: 2 } },                                           // weak body
-
-  { q: "I say nothing when I disagree, and tell myself it was not my place.",
-    scores: { knuckles: 2, silver: -1 }, scale: "frequency" },           // shy tongue
-
-  { q: "I let a decision I know to be wrong go unchallenged.",
-    scores: { knuckles: 2, eggman: -1 }, scale: "frequency" },           // shy tongue
-
-  { q: "I stop trying once I have decided the outcome will not matter.",
-    scores: { knuckles: 2, tails: 1 } },                                 // low spirits
-
-  { q: "I have already failed a thing in my head before I begin it.",
-    scores: { knuckles: 2 }, scale: "frequency" },                       // low spirits
-
-  /* ===== EGGMAN - exploitative, hubristic, vindictive ===== */
+  { q: "Do you consider yourself a happy person?",
+    scores: { knuckles: -2, silver: -1 } },
 
   { q: "I would use what someone told me in confidence if the moment called for it.",
-    scores: { eggman: 2, silver: 1 } },                                  // exploitative
+    scores: { eggman: 2, silver: 1 } },
 
-  { q: "I take what someone can give me without weighing what it costs them.",
-    scores: { eggman: 2 }, scale: "frequency" },                         // exploitative
+  { q: "Have you ever regretted not insulting someone?",
+    scores: { eggman: 2, silver: 1 } },
 
-  { q: "I believe my own judgement is sounder than most of the advice I am given.",
-    scores: { eggman: 2, silver: 1 } },                                  // hubris
+  { q: "I keep moving because choosing a direction would make me answerable for it.",
+    scores: { sonic: 2, knuckles: 1 } },
 
-  { q: "Being corrected lands as an insult before it lands as help.",
-    scores: { eggman: 2, silver: 1 } },                                  // hubris
-
-  { q: "I hold on to a wrong long after the person who did it has forgotten.",
-    scores: { eggman: 2 } },                                             // vindictive
-
-  { q: "I find it easier to be forgiven than to forgive.",
-    scores: { eggman: 2, silver: 1 } },                                  // vindictive
-
-  /* ===== SILVER - ego, self-absorption, thin skin ===== */
-
-  { q: "I would rather be admired by many than understood by one.",
-    scores: { silver: 2, knuckles: -1 } },                               // ego
-
-  { q: "I would diminish someone else if it raised me in the eyes of the room.",
-    scores: { silver: 2, eggman: 1 } },                                  // ego
-
-  { q: "When someone near me is praised, I measure myself against it.",
-    scores: { silver: 2 }, scale: "frequency" },                         // self-absorption
-
-  { q: "I turn a conversation back towards myself without meaning to.",
-    scores: { silver: 2 }, scale: "frequency" },                         // self-absorption
+  { q: "Do you value wealth over relations?",
+    scores: { tails: 2, eggman: 1 } },
 
   { q: "I can laugh at others more easily than I can stand being laughed at.",
-    scores: { silver: 2 } },                                             // thin skin
+    scores: { silver: 2 } },
 
-  { q: "A joke made at my expense stays with me longer than I let on.",
-    scores: { silver: 2, eggman: 1 } },                                  // thin skin
+  { q: "Have you neglected your loved ones?",
+    scores: { sonic: 2, knuckles: -1 } },
 
-  /* ===== what you are drawn to, when the flaws are set aside ===== */
+  { q: "I am talked into things I should have seen coming.",
+    scores: { tails: 2, eggman: -1 }, scale: "frequency" },
 
-  { q: "I want to know how a thing works even when I have been warned away from it.",
+  { q: "Do you think your friends actually like you, or do they pity you?",
+    scores: { knuckles: 2, silver: 1 } },
+
+  { q: "I hold on to a wrong long after the person who did it has forgotten.",
     scores: { eggman: 2 } },
 
-  { q: "A room does not feel right to me until I have made someone laugh.",
-    scores: { silver: 2 } },
+  { q: "I have taken credit for something I haven't done.",
+    scores: { tails: 2, eggman: 1 } },
 
   { q: "When something falls apart, people expect me to be the one holding it together.",
     scores: { knuckles: 2 }, scale: "frequency" },
 
+  { q: "I have let someone take blame that was mine.",
+    scores: { knuckles: 2, eggman: 1 } },
+
+  { q: "I forget things people trusted me to remember.",
+    scores: { sonic: 2 }, scale: "frequency" },
+
+  { q: "There is a version of me I gave up on.",
+    scores: { knuckles: 2 } },
+
+  { q: "I would rather be admired by many than understood by one.",
+    scores: { silver: 2, knuckles: -1 } },
+
+  { q: "There is a person I would hurt even if it cost me nothing.",
+    scores: { eggman: 2 } },
+
+  { q: "What I make comes out worse than what I pictured.",
+    scores: { tails: 2 }, scale: "frequency" },
+
+  { q: "Do you think people are naturally rotten to the core?",
+    scores: { eggman: 2, silver: 1 } },
+
+  { q: "I say nothing when I disagree, and tell myself it was not my place.",
+    scores: { knuckles: 2, silver: -1 }, scale: "frequency" },
+
+  /* held at 23, and the room goes quiet for it */
+  { q: "Are you fundamentally a bad person who pretends to be good?",
+    scores: { eggman: 1, silver: 1 }, pin: 23, hush: true },
+
+  { q: "I want to know how a thing works even when I have been warned away from it.",
+    scores: { eggman: 2 } },
+
+  { q: "I saw their face change and kept going anyway.",
+    scores: { silver: 2, eggman: 1 } },
+
+  { q: "I take the easier path when I am certain no one will check.",
+    scores: { tails: 2, sonic: 1 } },
+
+  { q: "Do you judge others for the exact same flaws you quietly forgive in yourself?",
+    scores: { eggman: 2, silver: 1 } },
+
+  { q: "I would walk away from people who depend on me if staying cost me too much.",
+    scores: { sonic: 2, knuckles: -1 } },
+
+  { q: "Someone who loved me has described me accurately in a way I hated.",
+    scores: { silver: 2, eggman: 1 } },
+
+  { q: "A room does not feel right to me until I have made someone laugh.",
+    scores: { silver: 2 } },
+
+  /* held at the halfway mark, whatever else moves around it */
+  { q: "Can a person truly change who they are, fundamentally?",
+    scores: { tails: -2, knuckles: -1 }, pin: 31 },
+
+  { q: "I am the reason someone stopped trying.",
+    scores: { eggman: 2, knuckles: 1 } },
+
+  { q: "I believe my own judgement is sounder than most of the advice I am given.",
+    scores: { eggman: 2, silver: 1 } },
+
+  { q: "If the people in my life compared notes, their versions of me would not match.",
+    scores: { silver: 2, eggman: 1 } },
+
+  { q: "When work turns demanding, I find a reason to stop before it is done.",
+    scores: { knuckles: 2, tails: 1 }, scale: "frequency" },
+
+  { q: "You are jealous of the success of those closest to you.",
+    scores: { silver: 2, eggman: 1 } },
+
   { q: "I would rather mend a thing myself than hand it to someone who could do it faster.",
     scores: { tails: 2 } },
+
+  { q: "Do you amplify your struggles to be seen?",
+    scores: { silver: 2 } },
+
+  { q: "I have already failed a thing in my head before I begin it.",
+    scores: { knuckles: 2 }, scale: "frequency" },
+
+  { q: "I would rather be handed the answer than find it.",
+    scores: { tails: 2 } },
+
+  { q: "I turn a conversation back towards myself without meaning to.",
+    scores: { silver: 2 }, scale: "frequency" },
+
+  { q: "Do you withhold love as a silent punishment?",
+    scores: { eggman: 2, knuckles: 1 } },
 
   { q: "I would give up something I love to spare someone else from suffering.",
     scores: { knuckles: 2, sonic: -1 } },
 
-  { q: "I would do something I believe is wrong if enough good came of it.",
-    scores: { eggman: 2, tails: 1 } },
+  { q: "I have been someone's cautionary tale.",
+    scores: { sonic: 1, knuckles: 1, eggman: 1 } },
 
-  { q: "I think of myself as a bad person.",
-    scores: { eggman: 1, silver: 1 } }
+  { q: "Being corrected lands as an insult before it lands as help.",
+    scores: { eggman: 2, silver: 1 } },
+
+  { q: "Someone has cried because of something I did, and I have since told it as a funny story.",
+    scores: { silver: 2, eggman: 1 } },
+
+  { q: "I would diminish someone else if it raised me in the eyes of the room.",
+    scores: { silver: 2, eggman: 1 } },
+
+  { q: "I have hurt someone in the exact way I was once hurt.",
+    scores: { eggman: 2 } },
+
+  { q: "I know which of my apologies were real.",
+    scores: { eggman: 1, silver: 1 } },
+
+  { q: "I would rather be underestimated than overestimated.",
+    scores: { knuckles: 2, silver: -1 } }
 ];
 
 
@@ -1265,6 +1302,7 @@ const screens = {
 
 let age = null;          /* answered once, before the statements */
 
+const plateEl = document.querySelector(".plate");
 const stepsEl = $("steps");
 const selector = $("selector");
 const art = $("selector-art");
@@ -1273,6 +1311,7 @@ const standing = $("standing");
 const WIND = parseInt(getComputedStyle(document.documentElement)
               .getPropertyValue("--wind")) || 100;
 
+let order = [];     // the order this run asks them in
 let index = 0;      // current question
 let picks = [];     // picks[i] = chosen step, or undefined
 let hover = 0;      // where the selector is sitting
@@ -1281,8 +1320,35 @@ let busy = false;
 
 function show(name){
   for (const k in screens) screens[k].classList.toggle("on", k === name);
+  if (name !== "quiz" && plateEl) plateEl.classList.remove("hushed");
   window.scrollTo({ top: 0, behavior: "auto" });
 }
+
+/* Shuffle the list, but hold any question carrying a `pin` at that
+   position. Everything else fills the gaps around them. */
+function makeOrder(){
+  const loose = [], pinned = new Map();
+
+  QUESTIONS.forEach((q, i) => {
+    if (q.pin && q.pin >= 1 && q.pin <= QUESTIONS.length) pinned.set(q.pin - 1, i);
+    else loose.push(i);
+  });
+
+  for (let i = loose.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    const t = loose[i]; loose[i] = loose[j]; loose[j] = t;
+  }
+
+  const out = [];
+  let next = 0;
+  for (let slot = 0; slot < QUESTIONS.length; slot++){
+    out.push(pinned.has(slot) ? pinned.get(slot) : loose[next++]);
+  }
+  return out;
+}
+
+/* the question in slot i of this run */
+function qAt(i){ return QUESTIONS[order[i]]; }
 
 function scaleOf(q){ return SCALES[q.scale || DEFAULT_SCALE]; }
 function middleOf(q){ return Math.floor(scaleOf(q).length / 2); }
@@ -1326,7 +1392,7 @@ const RUN_KEY = "ash-queen-run";
 
 function saveRun(wasWight){
   try{
-    localStorage.setItem(RUN_KEY, JSON.stringify({ picks, age, wight: !!wasWight }));
+    localStorage.setItem(RUN_KEY, JSON.stringify({ picks, order, age, wight: !!wasWight }));
   }catch(e){}
 }
 
@@ -1361,7 +1427,7 @@ function unrollResult(){
       entry.target.classList.add("unrolled");
       self.unobserve(entry.target);          /* it stays open once opened */
     });
-  }, { rootMargin: "0px 0px -8% 0px", threshold: 0.04 });
+  }, { rootMargin: "0px 0px 40% 0px", threshold: 0 });   /* open well before it is reached */
 
   parts.forEach(el => watcher.observe(el));
 }
@@ -1529,6 +1595,7 @@ function useMusic(track){
 function start(){
   index = 0;
   picks = [];
+  order = makeOrder();
   useAccent(null);                    // back to gold for the questions
   useBackground(null);
   useMusic(null);
@@ -1538,15 +1605,22 @@ function start(){
 }
 
 function render(){
-  const item = QUESTIONS[index];
+  const item = qAt(index);
   const labels = scaleOf(item);
 
   $("statement").textContent = item.q;
-  $("count").textContent = (index + 1) + " of " + QUESTIONS.length;
+  $("count").textContent = (index + 1) + " of " + order.length;
+
+  /* a hushed question takes the white frame and stops the music dead;
+     every other question hands it back */
+  const quiet = !!item.hush;
+  if (plateEl) plateEl.classList.toggle("hushed", quiet);
+  if (quiet){ if (music) music.pause(); }
+  else applyMusic();
   $("back").style.visibility = index === 0 ? "hidden" : "visible";
 
   /* dots for a short quiz, a bar for a long one */
-  const many = QUESTIONS.length > 12;
+  const many = order.length > 12;
   const pips = $("pips");
   const meter = $("meter");
   pips.hidden = many;
@@ -1554,10 +1628,10 @@ function render(){
 
   if (many){
     /* full on the last question, so it agrees with the count beside it */
-    $("meter-fill").style.width = ((index + 1) / QUESTIONS.length * 100) + "%";
+    $("meter-fill").style.width = ((index + 1) / order.length * 100) + "%";
   }else{
     pips.textContent = "";
-    QUESTIONS.forEach((_, i) => {
+    order.forEach((_, i) => {
       const p = document.createElement("span");
       p.className = "pip" + (i < index ? " done" : i === index ? " here" : "");
       pips.appendChild(p);
@@ -1664,7 +1738,7 @@ function choose(i){
     paint();
     setTimeout(() => {
       busy = false;
-      if (index < QUESTIONS.length - 1){ index++; render(); }
+      if (index < order.length - 1){ index++; render(); }
       else afterLast();
     }, 150);
   };
@@ -1682,7 +1756,7 @@ function back(){
 function allSame(){
   const first = picks[0];
   if (first === undefined) return false;
-  return QUESTIONS.every((item, i) => picks[i] === first);
+  return order.every((_, i) => picks[i] === first);
 }
 
 function afterLast(){
@@ -1719,7 +1793,8 @@ function tally(){
   const sum = {}, seen = {};
   for (const id in TRAITS){ sum[id] = 0; seen[id] = 0; }
 
-  QUESTIONS.forEach((item, i) => {
+  order.forEach((srcIndex, i) => {
+    const item = QUESTIONS[srcIndex];
     const pick = picks[i];
     if (pick === undefined) return;
 
@@ -1888,6 +1963,7 @@ function finish(special){
     });
   }
 
+  applyMusic();                 /* in case a hushed question left it paused */
   standing.hidden = true;
   saveRun(special === WIGHT);
   show("result");
@@ -1956,7 +2032,8 @@ function renderAnswers(){
 
   if (age) line("-", "Are you above or below 18?", age);
 
-  QUESTIONS.forEach((item, i) => {
+  order.forEach((srcIndex, i) => {
+    const item = QUESTIONS[srcIndex];
     const pick = picks[i];
     line(i + 1, item.q, pick === undefined ? "-" : scaleOf(item)[pick]);
   });
@@ -2100,7 +2177,10 @@ $("reset").addEventListener("click", () => {
 
 /* a finished run comes back to the result until it is reset */
 const saved = loadRun();
-if (saved && Array.isArray(saved.picks) && saved.picks.length === QUESTIONS.length){
+if (saved && Array.isArray(saved.picks) && Array.isArray(saved.order)
+    && saved.order.length === QUESTIONS.length
+    && saved.picks.length === saved.order.length){
+  order = saved.order;
   picks = saved.picks;
   age = saved.age || null;
   finish(saved.wight ? WIGHT : null);
