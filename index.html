@@ -43,7 +43,15 @@
     inset:0;
     z-index:-1;
     pointer-events:none;
-    background:var(--ink);
+    background:var(--ink) center/cover no-repeat;
+  }
+  /* a result may bring its own scene - the scrim keeps the plate readable
+     and stops a busy picture fighting the text on top of it */
+  #quizBackground.has-art::after{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:rgba(0,0,0,.5);
   }
   body.bg-off #quizBackground{display:none}
 
@@ -137,28 +145,7 @@
   }
   .btn-quiet:hover{color:var(--gold);border-color:var(--gold-dim)}
 
-  /* ---------------- the finished run ----------------
-   A completed test stays on the result screen when they come back.
-   Only Reset clears it. */
-
-const RUN_KEY = "ash-queen-run";
-
-function saveRun(wasWight){
-  try{
-    localStorage.setItem(RUN_KEY, JSON.stringify({ picks, age, wight: !!wasWight }));
-  }catch(e){}
-}
-
-function loadRun(){
-  try{ return JSON.parse(localStorage.getItem(RUN_KEY) || "null"); }
-  catch(e){ return null; }
-}
-
-function clearRun(){
-  try{ localStorage.removeItem(RUN_KEY); }catch(e){}
-}
-
-/* ---------------- settings ---------------- */
+  /* ---------------- settings ---------------- */
 
   .cog{
     position:absolute;
@@ -894,7 +881,11 @@ const DEFAULT_SCALE = "agreement";
    Each key is an id a question points at. Ties break by the order here.
 
      label   the name shown
-     image   picture for the result screen (optional - falls back to CREST)
+     image   picture for the result screen (optional - shows none without one)
+     background
+             a picture that fills the page behind the plate while this
+             result is on screen (optional). The Background setting in the
+             cog turns it off like any other.
      accent  hex colour taken from that picture (optional). On the result
              screen everything that was gold becomes this colour: borders,
              headings, the folly, the winning bar. Body text stays put.
@@ -1054,6 +1045,7 @@ const TRAITS = {
 const WIGHT = {
   label: "The Woe-Begotten Wight",
   image: "the_wight.png",
+  background: "wight_background.png",
   accent: "#ffffff",
   body: [
     "A Woe-Begotten Wight is a creature born from uncertainty, dishonesty, and a soul that refuses to take shape. It is neither one thing nor another, bearing only a mishapened form where a true identity ought to be.",
@@ -1301,6 +1293,18 @@ function clearRun(){
   try{ localStorage.removeItem(RUN_KEY); }catch(e){}
 }
 
+/* the scene behind the plate, for a result that carries one */
+function useBackground(url){
+  const bg = $("quizBackground");
+  if (url){
+    bg.style.backgroundImage = "url('" + asset(url) + "')";
+    bg.classList.add("has-art");
+  }else{
+    bg.style.backgroundImage = "";
+    bg.classList.remove("has-art");
+  }
+}
+
 /* ---------------- settings ---------------- */
 
 const STORE_KEY = "ash-queen-settings";
@@ -1399,6 +1403,7 @@ function start(){
   index = 0;
   picks = [];
   useAccent(null);                    // back to gold for the questions
+  useBackground(null);
   standing.hidden = !STANDING_QUESTION;
   show("quiz");
   render();
@@ -1645,6 +1650,7 @@ function finish(special){
   const result = special || TRAITS[winner];
 
   useAccent(result.accent || null);
+  useBackground(result.background || null);
 
   /* No silent swap to the crest: a result with no picture shows none,
      and a picture that fails to load stays hidden rather than pretending. */
@@ -1935,6 +1941,7 @@ $("reset").addEventListener("click", () => {
   age = null;
   index = 0;
   useAccent(null);
+  useBackground(null);
   standing.hidden = true;
   show("start");
 });
