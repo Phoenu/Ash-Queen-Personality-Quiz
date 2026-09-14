@@ -143,6 +143,15 @@
   /* and it can send the insignia away entirely */
   .plate.bare .selector{display:none}
 
+  /* a question can clear the plate of everything but itself: the standing
+     question and its rule, the cog, and the way back */
+  .plate.solo .standing,
+  .plate.solo .cog,
+  .plate.solo .footer{display:none}
+
+  /* a question may set its own line breaks rather than leave them to chance */
+  .statement-line{display:block}
+
   h1,h2{
     font-family:var(--display);
     font-weight:700;
@@ -1131,10 +1140,16 @@ const WIGHT = {
      reverse optional - flips the whole statement
      pin     optional - hold this one at that position (1-based) while
              everything else is shuffled around it
+     lines   optional - render the statement on these rows instead of
+             letting it wrap wherever it lands. `q` is still the text
+             used for scoring and the answer sheet.
      mood    optional - a colour this question paints the whole plate in
      bare    optional - hide the insignia for this one
      mute    optional - the selector makes no sound on this one
      silent  optional - the music stops while this one is on screen
+     solo    optional - hide the standing question, the cog and Back
+     once    optional - seal it after answering, so neither Back nor
+             Next can reach it again
 
    Add or remove freely. Everything downstream follows the list.
    --------------------------------------------------------------------- */
@@ -1231,11 +1246,16 @@ const QUESTIONS = [
   { q: "A room does not feel right to me until I have made someone laugh.",
     scores: { silver: 2 } },
 
-  /* held at 31: the whole plate goes white, the insignia leaves, the
-     selector falls silent and the music stops dead */
+  /* Held at 31. The plate empties out for it - blood red, no insignia,
+     no cog, no way back, and no sound of any kind. Once it is answered it
+     is sealed: stepping back from 32 lands on 30, and going forward from
+     30 returns to 32. It is asked once and never again. */
   { q: "Can a person truly change who they are, fundamentally?",
+    lines: ["Can a person truly change who they are,", "fundamentally?"],
     scores: { tails: -2, knuckles: -1 },
-    pin: 31, mood: "#ffffff", bare: true, mute: true, silent: true },
+    pin: 31,
+    mood: "#8f1414",
+    bare: true, mute: true, silent: true, solo: true, once: true },
 
   { q: "I am the reason someone stopped trying.",
     scores: { eggman: 2, knuckles: 1 } },
@@ -1324,6 +1344,7 @@ const WIND = parseInt(getComputedStyle(document.documentElement)
               .getPropertyValue("--wind")) || 100;
 
 let order = [];     // the order this run asks them in
+let sealed = new Set();   // slots answered once and never offered again
 let index = 0;      // current question
 let picks = [];     // picks[i] = chosen step, or undefined
 let hover = 0;      // where the selector is sitting
@@ -1333,7 +1354,7 @@ let busy = false;
 function show(name){
   for (const k in screens) screens[k].classList.toggle("on", k === name);
   if (name !== "quiz" && plateEl){
-    plateEl.classList.remove("moody", "bare");
+    plateEl.classList.remove("moody", "bare", "solo");
     plateEl.style.removeProperty("--mood");
     muteHover = false;
   }
@@ -1613,6 +1634,7 @@ function useMusic(track){
 function start(){
   index = 0;
   picks = [];
+  sealed = new Set();
   order = makeOrder();
   useAccent(null);                    // back to gold for the questions
   useBackground(null);
@@ -1626,7 +1648,19 @@ function render(){
   const item = qAt(index);
   const labels = scaleOf(item);
 
-  $("statement").textContent = item.q;
+  const statement = $("statement");
+  statement.textContent = "";
+  if (Array.isArray(item.lines)){
+    item.lines.forEach(text => {
+      const row = document.createElement("span");
+      row.className = "statement-line";
+      row.textContent = text;
+      statement.appendChild(row);
+    });
+  }else{
+    statement.textContent = item.q;
+  }
+
   $("count").textContent = (index + 1) + " of " + order.length;
 
   /* every mark is separate - a question may carry any of them, and any
@@ -1634,6 +1668,7 @@ function render(){
   if (plateEl){
     plateEl.classList.toggle("moody", !!item.mood);
     plateEl.classList.toggle("bare", !!item.bare);
+    plateEl.classList.toggle("solo", !!item.solo);
     if (item.mood) plateEl.style.setProperty("--mood", item.mood);
     else plateEl.style.removeProperty("--mood");
   }
@@ -1760,10 +1795,13 @@ function choose(i){
 
   const commit = () => {
     picks[index] = i;
+    if (qAt(index).once) sealed.add(index);   /* asked once, then closed */
     paint();
     setTimeout(() => {
       busy = false;
-      if (index < order.length - 1){ index++; render(); }
+      let next = index + 1;
+      while (next < order.length && sealed.has(next)) next++;
+      if (next < order.length){ index = next; render(); }
       else afterLast();
     }, 150);
   };
@@ -1773,7 +1811,9 @@ function choose(i){
 }
 
 function back(){
-  if (index > 0){ index--; render(); }
+  let prev = index - 1;
+  while (prev >= 0 && sealed.has(prev)) prev--;
+  if (prev >= 0){ index = prev; render(); }
 }
 
 /* every statement answered with the same step - all Neutral, all Never,
@@ -2001,7 +2041,9 @@ function renderVessels(){
   const list = $("vessel-list");
   list.textContent = "";
 
-  Object.keys(TRAITS).map(id => TRAITS[id]).concat([WIGHT]).forEach(v => {
+  /* the Wight is not one of the vessels on offer - it is what is left
+     when none of them takes hold, so it stays out of this list */
+  Object.keys(TRAITS).map(id => TRAITS[id]).forEach(v => {
     const row = document.createElement("div");
     row.className = "vessel";
 
