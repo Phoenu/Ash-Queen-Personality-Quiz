@@ -905,26 +905,116 @@ const WIGHT = {
      q       the statement
      scores  which results it feeds, and how strongly.
              a NEGATIVE weight means agreeing counts against that result.
-     trait   shorthand for scores: { <trait>: 1 }
      scale   optional - defaults to DEFAULT_SCALE
      reverse optional - flips the whole statement
 
-   Add or remove freely. The progress bar, the count and the scoring all
-   follow the list, and a result with more questions than another is not
-   favoured - each is averaged against its own weight.
+   Every result has three flaws, and every flaw gets two statements, so
+   no single answer decides anything. The tag after each line says which
+   flaw it is there to catch - keep them balanced if you add more.
    --------------------------------------------------------------------- */
 const QUESTIONS = [
 
-  /* --- what you are drawn to --- */
+  /* ===== SONIC - lack of direction, forgetfulness, selfishness ===== */
 
   { q: "I grow restless when I have stayed in one place too long.",
-    scores: { sonic: 2 }, scale: "frequency" },
+    scores: { sonic: 2 }, scale: "frequency" },                          // direction
 
-  { q: "I would rather mend a thing myself than hand it to someone who could do it faster.",
-    scores: { tails: 2, knuckles: 1 } },
+  { q: "I keep moving because choosing a direction would make me answerable for it.",
+    scores: { sonic: 2, knuckles: 1 } },                                 // direction
 
-  { q: "When something falls apart, people expect me to be the one holding it together.",
-    scores: { knuckles: 2 }, scale: "frequency" },
+  { q: "I forget things people trusted me to remember.",
+    scores: { sonic: 2 }, scale: "frequency" },                          // forgetfulness
+
+  { q: "I arrive without the thing I swore I would bring.",
+    scores: { sonic: 2, tails: 1 }, scale: "frequency" },                // forgetfulness
+
+  { q: "I would walk away from people who depend on me if staying cost me too much.",
+    scores: { sonic: 2, knuckles: -1 } },                                // selfishness
+
+  { q: "I would break a promise to follow something better.",
+    scores: { sonic: 2, eggman: 1 } },                                   // selfishness
+
+  /* ===== TAILS - dull wits, clumsy hands, sloth ===== */
+
+  { q: "I am talked into things I should have seen coming.",
+    scores: { tails: 2, eggman: -1 }, scale: "frequency" },              // dull wits
+
+  { q: "I learn from a mistake only once it has cost me something.",
+    scores: { tails: 2 } },                                              // dull wits
+
+  { q: "What I make comes out worse than what I pictured.",
+    scores: { tails: 2 }, scale: "frequency" },                          // clumsy hands
+
+  { q: "Something I mended comes apart again in my hands.",
+    scores: { tails: 2, knuckles: 1 }, scale: "frequency" },             // clumsy hands
+
+  { q: "I take the easier path when I am certain no one will check.",
+    scores: { tails: 2, sonic: 1 } },                                    // sloth
+
+  { q: "I put a job down half-finished and tell myself I will return to it.",
+    scores: { tails: 2, knuckles: 1 }, scale: "frequency" },             // sloth
+
+  /* ===== KNUCKLES - weak body, shy tongue, low spirits ===== */
+
+  { q: "When work turns demanding, I find a reason to stop before it is done.",
+    scores: { knuckles: 2, tails: 1 }, scale: "frequency" },             // weak body
+
+  { q: "I expect my own strength to give out before the task does.",
+    scores: { knuckles: 2 } },                                           // weak body
+
+  { q: "I say nothing when I disagree, and tell myself it was not my place.",
+    scores: { knuckles: 2, silver: -1 }, scale: "frequency" },           // shy tongue
+
+  { q: "I let a decision I know to be wrong go unchallenged.",
+    scores: { knuckles: 2, eggman: -1 }, scale: "frequency" },           // shy tongue
+
+  { q: "I stop trying once I have decided the outcome will not matter.",
+    scores: { knuckles: 2, tails: 1 } },                                 // low spirits
+
+  { q: "I have already failed a thing in my head before I begin it.",
+    scores: { knuckles: 2 }, scale: "frequency" },                       // low spirits
+
+  /* ===== EGGMAN - exploitative, hubristic, vindictive ===== */
+
+  { q: "I would use what someone told me in confidence if the moment called for it.",
+    scores: { eggman: 2, silver: 1 } },                                  // exploitative
+
+  { q: "I take what someone can give me without weighing what it costs them.",
+    scores: { eggman: 2 }, scale: "frequency" },                         // exploitative
+
+  { q: "I believe my own judgement is sounder than most of the advice I am given.",
+    scores: { eggman: 2, silver: 1 } },                                  // hubris
+
+  { q: "Being corrected lands as an insult before it lands as help.",
+    scores: { eggman: 2, silver: 1 } },                                  // hubris
+
+  { q: "I hold on to a wrong long after the person who did it has forgotten.",
+    scores: { eggman: 2 } },                                             // vindictive
+
+  { q: "I find it easier to be forgiven than to forgive.",
+    scores: { eggman: 2, silver: 1 } },                                  // vindictive
+
+  /* ===== SILVER - ego, self-absorption, thin skin ===== */
+
+  { q: "I would rather be admired by many than understood by one.",
+    scores: { silver: 2, knuckles: -1 } },                               // ego
+
+  { q: "I would diminish someone else if it raised me in the eyes of the room.",
+    scores: { silver: 2, eggman: 1 } },                                  // ego
+
+  { q: "When someone near me is praised, I measure myself against it.",
+    scores: { silver: 2 }, scale: "frequency" },                         // self-absorption
+
+  { q: "I turn a conversation back towards myself without meaning to.",
+    scores: { silver: 2 }, scale: "frequency" },                         // self-absorption
+
+  { q: "I can laugh at others more easily than I can stand being laughed at.",
+    scores: { silver: 2 } },                                             // thin skin
+
+  { q: "A joke made at my expense stays with me longer than I let on.",
+    scores: { silver: 2, eggman: 1 } },                                  // thin skin
+
+  /* ===== what you are drawn to, when the flaws are set aside ===== */
 
   { q: "I want to know how a thing works even when I have been warned away from it.",
     scores: { eggman: 2 } },
@@ -932,85 +1022,20 @@ const QUESTIONS = [
   { q: "A room does not feel right to me until I have made someone laugh.",
     scores: { silver: 2 } },
 
-  { q: "I would rather make something useful than something admired.",
-    scores: { tails: 2, silver: -1 } },
+  { q: "When something falls apart, people expect me to be the one holding it together.",
+    scores: { knuckles: 2 }, scale: "frequency" },
 
-  { q: "I would rather build something that lasts than something anyone remembers me for.",
-    scores: { knuckles: 2, silver: -1 } },
-
-  /* --- what it costs other people --- */
-
-  { q: "I would diminish someone else if it raised me in the eyes of the room.",
-    scores: { silver: 2, eggman: 1 } },
-
-  { q: "I would use what someone told me in confidence if the moment called for it.",
-    scores: { eggman: 2, silver: 1 } },
+  { q: "I would rather mend a thing myself than hand it to someone who could do it faster.",
+    scores: { tails: 2 } },
 
   { q: "I would give up something I love to spare someone else from suffering.",
     scores: { knuckles: 2, sonic: -1 } },
 
-  { q: "I would walk away from people who depend on me if staying cost me too much.",
-    scores: { sonic: 2, knuckles: -1 } },
-
-  { q: "I would break a promise to follow something better.",
-    scores: { sonic: 2, eggman: 1 } },
-
   { q: "I would do something I believe is wrong if enough good came of it.",
     scores: { eggman: 2, tails: 1 } },
 
-  /* --- what you do with a wound --- */
-
-  { q: "I hold on to a wrong long after the person who did it has forgotten.",
-    scores: { eggman: 2 } },
-
-  { q: "I find it easier to be forgiven than to forgive.",
-    scores: { eggman: 2, silver: 1 } },
-
-  { q: "I can laugh at others more easily than I can stand being laughed at.",
-    scores: { silver: 2 } },
-
-  { q: "When someone near me is praised, I measure myself against it.",
-    scores: { silver: 2 }, scale: "frequency" },
-
-  { q: "I would rather be admired by many than understood by one.",
-    scores: { silver: 2, knuckles: -1 } },
-
-  /* --- what you avoid --- */
-
-  { q: "I say nothing when I disagree, and tell myself it was not my place.",
-    scores: { knuckles: 2, silver: -1 }, scale: "frequency" },
-
-  { q: "I stay away from things I expect to be bad at.",
-    scores: { knuckles: 2, tails: 1 } },
-
-  { q: "I stop trying once I have decided the outcome will not matter.",
-    scores: { knuckles: 2, tails: 1 } },
-
-  { q: "I take the easier path when I am certain no one will check.",
-    scores: { tails: 2, sonic: 1 } },
-
-  { q: "I would rather repeat what already works than risk something better.",
-    scores: { tails: 2, eggman: -1 } },
-
-  { q: "I learn from a mistake only once it has cost me something.",
-    scores: { tails: 2 } },
-
-  /* --- what you carry --- */
-
-  { q: "I forget things people trusted me to remember.",
-    scores: { sonic: 2 }, scale: "frequency" },
-
-  { q: "I keep moving because choosing a direction would make me answerable for it.",
-    scores: { sonic: 2, knuckles: 1 } },
-
-  { q: "I believe my own judgement is sounder than most of the advice I am given.",
-    scores: { eggman: 2, silver: 1 } },
-
   { q: "I think of myself as a bad person.",
-    scores: { eggman: 1, silver: 1 } },
-
-  { q: "I would rather be needed than be free.",
-    scores: { knuckles: 2, sonic: -2 } }
+    scores: { eggman: 1, silver: 1 } }
 ];
 
 
