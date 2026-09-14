@@ -70,40 +70,30 @@
     -webkit-backdrop-filter:blur(4px);
   }
   /* switching the background off puts the solid plate back.
-     Scoped to a scene so it leaves the parchment plate alone. */
+     Only applies while a result is carrying a scene. */
   body.bg-off.has-scene .plate{
     background:var(--ink);
     backdrop-filter:none;
     -webkit-backdrop-filter:none;
   }
 
-  /* ---------------- the parchment plate ----------------
-     Set RESULT_PARCHMENT to null in the config to drop all of this. The
-     texture ships as grey grain; the colour below is multiplied into it,
-     so the paper can be re-tinted from here without touching the file. */
-  .plate.parchment{
-    background-color:#e0cfa6;
-    background-size:cover;
-    background-position:center;
-    background-repeat:no-repeat;
-    background-blend-mode:multiply;
-    border-color:#6d5a38;
-
-    /* the page reads dark on pale paper - every component follows these */
-    --text:#2b2117;
-    --muted:#584733;
-    --gold-dim:#7d6640;
-    --gold-faint:rgba(70,54,32,.32);
-    --gold:color-mix(in srgb, var(--accent) 62%, #211708);
-
-    color:var(--text);
+  /* ---------------- the result unrolls ----------------
+     Each block of a result is tipped back on its top edge and swings
+     down as it comes into view, the way a scroll drops open. The class
+     is only ever added by script, so with no JavaScript at all the
+     whole result is simply visible. */
+  .unroll{
+    opacity:0;
+    transform:rotateX(-38deg) translateY(-8px);
+    transform-origin:top center;
+    transition:opacity .45s ease, transform .6s cubic-bezier(.2,.75,.3,1);
   }
-  .plate.parchment .btn{color:#f3ead6}
-  .plate.parchment .btn:hover{background:transparent;color:var(--gold)}
-  .plate.parchment .btn-dark{
-    color:#5e4e38;
-    background:rgba(255,255,255,.28);
-    border-color:#8a7350;
+  .unroll.unrolled{
+    opacity:1;
+    transform:none;
+  }
+  @media (prefers-reduced-motion:reduce){
+    .unroll{opacity:1;transform:none;transition:none}
   }
 
   .wrap{
@@ -123,6 +113,7 @@
     width:100%;
     max-width:680px;
     margin-block:auto;
+    perspective:1400px;          /* gives the unrolling its depth */
     border:1px solid var(--gold-dim);
     background:var(--ink);
     padding:clamp(26px,5vw,46px);
@@ -884,10 +875,6 @@ const STANDING_QUESTION = "Who are you?";  // sits above the questions. "" remov
 const SHOW_TALLY = true;                   // score bars on the result screen
 const TALLY_TOP = 5;                       // how many vessels to list
 
-/* THE PAPER BEHIND A RESULT. Set this to null for the plain black plate -
-   that one line undoes the whole parchment look. The Wight never takes it;
-   it brings its own scene. */
-const RESULT_PARCHMENT = "parchment.png";
 
 /* Bump this whenever you REPLACE a picture or sound while keeping its
    filename. Browsers cache assets hard, and without a new stamp they
@@ -1352,13 +1339,31 @@ function clearRun(){
   try{ localStorage.removeItem(RUN_KEY); }catch(e){}
 }
 
-/* the paper the result is written on */
-const plateEl = document.querySelector(".plate");
+/* Let the result drop open a section at a time as it is scrolled into
+   view. Nothing is hidden until this runs, so a page without scripting
+   still shows everything. */
+function unrollResult(){
+  const parts = screens.result.querySelectorAll(
+    ".verdict, .prose, #verdict-folly, #verdict-shadow, #others, .result-actions"
+  );
 
-function useParchment(on){
-  if (!plateEl) return;
-  plateEl.classList.toggle("parchment", !!on);
-  plateEl.style.backgroundImage = on ? "url('" + asset(RESULT_PARCHMENT) + "')" : "";
+  const still = window.matchMedia("(prefers-reduced-motion:reduce)").matches;
+  if (still || !("IntersectionObserver" in window)){
+    parts.forEach(el => el.classList.remove("unroll", "unrolled"));
+    return;
+  }
+
+  parts.forEach(el => { el.classList.add("unroll"); el.classList.remove("unrolled"); });
+
+  const watcher = new IntersectionObserver((seen, self) => {
+    seen.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add("unrolled");
+      self.unobserve(entry.target);          /* it stays open once opened */
+    });
+  }, { rootMargin: "0px 0px -8% 0px", threshold: 0.04 });
+
+  parts.forEach(el => watcher.observe(el));
 }
 
 /* the scene behind the plate, for a result that carries one */
@@ -1527,7 +1532,6 @@ function start(){
   useAccent(null);                    // back to gold for the questions
   useBackground(null);
   useMusic(null);
-  useParchment(false);
   standing.hidden = !STANDING_QUESTION;
   show("quiz");
   render();
@@ -1780,7 +1784,6 @@ function finish(special){
   useAccent(result.accent || null);
   useBackground(result.background || null);
   useMusic(result.music || null);
-  useParchment(RESULT_PARCHMENT && !special);   /* the Wight keeps the black plate */
 
   /* No silent swap to the crest: a result with no picture shows none,
      and a picture that fails to load stays hidden rather than pretending. */
@@ -1888,6 +1891,7 @@ function finish(special){
   standing.hidden = true;
   saveRun(special === WIGHT);
   show("result");
+  unrollResult();
 }
 
 /* ---------------- the other screens ---------------- */
@@ -2090,7 +2094,6 @@ $("reset").addEventListener("click", () => {
   useAccent(null);
   useBackground(null);
   useMusic(null);
-  useParchment(false);
   standing.hidden = true;
   show("start");
 });
