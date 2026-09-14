@@ -1123,8 +1123,8 @@ const WIGHT = {
      reverse optional - flips the whole statement
      pin     optional - hold this one at that position (1-based) while
              everything else is shuffled around it
-     hush    optional - the plate turns white and the music stops while
-             this one is on screen
+     hush    optional - the plate's frame turns white for this one
+     silent  optional - the music stops while this one is on screen
 
    Add or remove freely. Everything downstream follows the list.
    --------------------------------------------------------------------- */
@@ -1196,7 +1196,7 @@ const QUESTIONS = [
   { q: "I say nothing when I disagree, and tell myself it was not my place.",
     scores: { knuckles: 2, silver: -1 }, scale: "frequency" },
 
-  /* held at 23, and the room goes quiet for it */
+  /* held at 23, and the frame goes stark for it */
   { q: "Are you fundamentally a bad person who pretends to be good?",
     scores: { eggman: 1, silver: 1 }, pin: 23, hush: true },
 
@@ -1221,9 +1221,9 @@ const QUESTIONS = [
   { q: "A room does not feel right to me until I have made someone laugh.",
     scores: { silver: 2 } },
 
-  /* held at the halfway mark, whatever else moves around it */
+  /* held at 31, and the music stops dead for it */
   { q: "Can a person truly change who they are, fundamentally?",
-    scores: { tails: -2, knuckles: -1 }, pin: 31 },
+    scores: { tails: -2, knuckles: -1 }, pin: 31, silent: true },
 
   { q: "I am the reason someone stopped trying.",
     scores: { eggman: 2, knuckles: 1 } },
@@ -1611,11 +1611,10 @@ function render(){
   $("statement").textContent = item.q;
   $("count").textContent = (index + 1) + " of " + order.length;
 
-  /* a hushed question takes the white frame and stops the music dead;
-     every other question hands it back */
-  const quiet = !!item.hush;
-  if (plateEl) plateEl.classList.toggle("hushed", quiet);
-  if (quiet){ if (music) music.pause(); }
+  /* the white frame and the silence are separate marks - a question can
+     carry either, both, or neither, and any other question hands them back */
+  if (plateEl) plateEl.classList.toggle("hushed", !!item.hush);
+  if (item.silent){ if (music) music.pause(); }
   else applyMusic();
   $("back").style.visibility = index === 0 ? "hidden" : "visible";
 
