@@ -131,6 +131,33 @@
   .screen{display:none}
   .screen.on{display:block}
 
+  /* A question can hang a picture above the plate - outside the frame,
+     on the bare black, where nothing washes it out. */
+  .omen{
+    position:absolute;
+    bottom:100%;
+    left:50%;
+    transform:translateX(-50%);
+    /* most of this file is empty space around the subject, so it has to
+       run wide before the subject itself reads at any size */
+    margin-bottom:clamp(0px,1vw,8px);
+    width:clamp(260px,46vw,440px);
+    max-width:96%;
+    height:auto;
+    pointer-events:none;
+    filter:drop-shadow(0 0 22px rgba(180,20,20,.35));
+    animation:omen-wake .8s ease both;
+  }
+  .omen[hidden]{display:none}
+
+  @keyframes omen-wake{
+    from{opacity:0;transform:translateX(-50%) translateY(10px)}
+    to  {opacity:1;transform:translateX(-50%)}
+  }
+  @media (prefers-reduced-motion:reduce){
+    .omen{animation:none}
+  }
+
   /* A question can take the plate over: --mood is set from its own entry
      and everything that was gold follows it, frame and statement included. */
   .plate.moody{
@@ -807,6 +834,9 @@
       </div>
     </div>
 
+    <!-- hung above the plate by any question that asks for it -->
+    <img class="omen" id="omen" alt="" hidden>
+
     <!-- the question that stays overhead through the quiz -->
     <p class="standing" id="standing" hidden></p>
 
@@ -1202,6 +1232,8 @@ const WIGHT = {
      background
              optional - a scene behind the plate while this question is up.
              Always shown, whatever the Background setting says.
+     omen    optional - a picture that hangs above the plate for this
+             question, out on the black where nothing can dim it.
      mood    optional - a colour this question paints the whole plate in
      bare    optional - hide the insignia for this one
      mute    optional - the selector makes no sound on this one
@@ -1314,7 +1346,7 @@ const QUESTIONS = [
     scores: { tails: -2, knuckles: -1 },
     pin: 31,
     mood: "#8f1414",
-    background: "i_see_you.png",
+    omen: "i_see_you.png",
     bare: true, mute: true, silent: true, solo: true, once: true },
 
   { q: "You are the reason someone stopped trying.",
@@ -1415,6 +1447,10 @@ let busy = false;
 
 function show(name){
   for (const k in screens) screens[k].classList.toggle("on", k === name);
+  if (name !== "quiz"){
+    const omen = $("omen");
+    if (omen){ omen.hidden = true; omen.removeAttribute("src"); }
+  }
   if (name !== "quiz" && plateEl){
     plateEl.classList.remove("moody", "bare", "solo");
     plateEl.style.removeProperty("--mood");
@@ -1776,6 +1812,16 @@ function render(){
      question without them hands the plate back as it was */
   /* a question's own scene always shows, settings or not */
   useBackground(item.background || null, true);
+
+  /* and anything it hangs above the plate */
+  const omen = $("omen");
+  if (item.omen){
+    omen.hidden = false;
+    omen.src = asset(item.omen);
+  }else{
+    omen.hidden = true;
+    omen.removeAttribute("src");
+  }
 
   if (plateEl){
     plateEl.classList.toggle("moody", !!item.mood);
