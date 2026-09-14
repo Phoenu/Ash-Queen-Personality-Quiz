@@ -91,6 +91,8 @@
     line-height:1.15;
     color:var(--gold);
     text-transform:uppercase;
+    overflow-wrap:break-word;      /* "Blacksmith/Merchant" has nowhere to break */
+    hyphens:auto;
   }
 
   .rule{
@@ -253,7 +255,13 @@
     gap:14px;
     margin-bottom:26px;
   }
-  .pips{display:flex;gap:7px}
+  .pips{display:flex;gap:7px;flex-wrap:wrap}
+  .pips[hidden]{display:none}
+
+  /* too many questions for dots - use a bar instead */
+  .meter{flex:1;height:3px;background:var(--gold-faint)}
+  .meter[hidden]{display:none}
+  .meter-fill{height:100%;background:var(--gold);width:0;transition:width .25s ease}
   .pip{
     width:9px;height:9px;
     transform:rotate(45deg);
@@ -482,7 +490,13 @@
     object-fit:contain;
     display:block;
   }
-  .tally-name{font-family:Cinzel,Georgia,serif;letter-spacing:.03em;font-size:12.5px}
+  .tally-name{
+    font-family:Cinzel,Georgia,serif;
+    letter-spacing:.03em;
+    font-size:12.5px;
+    min-width:0;
+    overflow-wrap:anywhere;
+  }
   .tally-track{height:3px;background:var(--gold-faint)}
   .tally-fill{height:100%;background:var(--gold-dim);width:0}
   .tally-pct{font-variant-numeric:tabular-nums;font-size:12px}
@@ -587,6 +601,7 @@
     <section class="screen" id="s-quiz">
       <div class="progress">
         <div class="pips" id="pips"></div>
+        <div class="meter" id="meter" hidden><span class="meter-fill" id="meter-fill"></span></div>
         <span class="count" id="count"></span>
       </div>
 
@@ -649,10 +664,12 @@
 
 const QUIZ_TITLE = "Ash Queen Personality Test";
 const QUIZ_INTRO = "Find out what kind of poor soul you truly are";
+/* the opening line under the title is QUIZ_INTRO above */
 
 const CREST = "crest.png";                 // the selector image
 const STANDING_QUESTION = "Who are you?";  // sits above the questions. "" removes it.
 const SHOW_TALLY = true;                   // score bars on the result screen
+const TALLY_TOP = 3;                       // how many of them to list
 
 /* Bump this whenever you REPLACE a picture or sound while keeping its
    filename. Browsers cache assets hard, and without a new stamp they
@@ -877,14 +894,117 @@ const WIGHT = {
 };
 
 /* ---------------------------------------------------------------------
-   QUESTIONS - one line each. Placeholders until you write the real ones.
+   QUESTIONS
+
+     q       the statement
+     scores  which results it feeds, and how strongly.
+             a NEGATIVE weight means agreeing counts against that result.
+     trait   shorthand for scores: { <trait>: 1 }
+     scale   optional - defaults to DEFAULT_SCALE
+     reverse optional - flips the whole statement
+
+   Add or remove freely. The progress bar, the count and the scoring all
+   follow the list, and a result with more questions than another is not
+   favoured - each is averaged against its own weight.
    --------------------------------------------------------------------- */
 const QUESTIONS = [
-  { q: "I would rather see where a road goes than be told where it ends.", trait: "sonic"    },
-  { q: "I would rather make a thing with my hands than argue about it.",   trait: "tails"    },
-  { q: "People come to me when something needs holding together.",         trait: "knuckles" },
-  { q: "I take a thing apart to find out what it really is.",              trait: "eggman"   },
-  { q: "I say the thing nobody else in the room is willing to say.",       trait: "silver"   }
+
+  /* --- what you are drawn to --- */
+
+  { q: "I grow restless when I have stayed in one place too long.",
+    scores: { sonic: 2 }, scale: "frequency" },
+
+  { q: "I would rather mend a thing myself than hand it to someone who could do it faster.",
+    scores: { tails: 2, knuckles: 1 } },
+
+  { q: "When something falls apart, people expect me to be the one holding it together.",
+    scores: { knuckles: 2 }, scale: "frequency" },
+
+  { q: "I want to know how a thing works even when I have been warned away from it.",
+    scores: { eggman: 2 } },
+
+  { q: "A room does not feel right to me until I have made someone laugh.",
+    scores: { silver: 2 } },
+
+  { q: "I would rather make something useful than something admired.",
+    scores: { tails: 2, silver: -1 } },
+
+  { q: "I would rather build something that lasts than something anyone remembers me for.",
+    scores: { knuckles: 2, silver: -1 } },
+
+  /* --- what it costs other people --- */
+
+  { q: "I would diminish someone else if it raised me in the eyes of the room.",
+    scores: { silver: 2, eggman: 1 } },
+
+  { q: "I would use what someone told me in confidence if the moment called for it.",
+    scores: { eggman: 2, silver: 1 } },
+
+  { q: "I would give up something I love to spare someone else from suffering.",
+    scores: { knuckles: 2, sonic: -1 } },
+
+  { q: "I would walk away from people who depend on me if staying cost me too much.",
+    scores: { sonic: 2, knuckles: -1 } },
+
+  { q: "I would break a promise to follow something better.",
+    scores: { sonic: 2, eggman: 1 } },
+
+  { q: "I would do something I believe is wrong if enough good came of it.",
+    scores: { eggman: 2, tails: 1 } },
+
+  /* --- what you do with a wound --- */
+
+  { q: "I hold on to a wrong long after the person who did it has forgotten.",
+    scores: { eggman: 2 } },
+
+  { q: "I find it easier to be forgiven than to forgive.",
+    scores: { eggman: 2, silver: 1 } },
+
+  { q: "I can laugh at others more easily than I can stand being laughed at.",
+    scores: { silver: 2 } },
+
+  { q: "When someone near me is praised, I measure myself against it.",
+    scores: { silver: 2 }, scale: "frequency" },
+
+  { q: "I would rather be admired by many than understood by one.",
+    scores: { silver: 2, knuckles: -1 } },
+
+  /* --- what you avoid --- */
+
+  { q: "I say nothing when I disagree, and tell myself it was not my place.",
+    scores: { knuckles: 2, silver: -1 }, scale: "frequency" },
+
+  { q: "I stay away from things I expect to be bad at.",
+    scores: { knuckles: 2, tails: 1 } },
+
+  { q: "I stop trying once I have decided the outcome will not matter.",
+    scores: { knuckles: 2, tails: 1 } },
+
+  { q: "I take the easier path when I am certain no one will check.",
+    scores: { tails: 2, sonic: 1 } },
+
+  { q: "I would rather repeat what already works than risk something better.",
+    scores: { tails: 2, eggman: -1 } },
+
+  { q: "I learn from a mistake only once it has cost me something.",
+    scores: { tails: 2 } },
+
+  /* --- what you carry --- */
+
+  { q: "I forget things people trusted me to remember.",
+    scores: { sonic: 2 }, scale: "frequency" },
+
+  { q: "I keep moving because choosing a direction would make me answerable for it.",
+    scores: { sonic: 2, knuckles: 1 } },
+
+  { q: "I believe my own judgement is sounder than most of the advice I am given.",
+    scores: { eggman: 2, silver: 1 } },
+
+  { q: "I think of myself as a bad person.",
+    scores: { eggman: 1, silver: 1 } },
+
+  { q: "I would rather be needed than be free.",
+    scores: { knuckles: 2, sonic: -2 } }
 ];
 
 
@@ -1065,13 +1185,23 @@ function render(){
   $("count").textContent = (index + 1) + " of " + QUESTIONS.length;
   $("back").style.visibility = index === 0 ? "hidden" : "visible";
 
+  /* dots for a short quiz, a bar for a long one */
+  const many = QUESTIONS.length > 12;
   const pips = $("pips");
-  pips.textContent = "";
-  QUESTIONS.forEach((_, i) => {
-    const p = document.createElement("span");
-    p.className = "pip" + (i < index ? " done" : i === index ? " here" : "");
-    pips.appendChild(p);
-  });
+  const meter = $("meter");
+  pips.hidden = many;
+  meter.hidden = !many;
+
+  if (many){
+    $("meter-fill").style.width = (index / QUESTIONS.length * 100) + "%";
+  }else{
+    pips.textContent = "";
+    QUESTIONS.forEach((_, i) => {
+      const p = document.createElement("span");
+      p.className = "pip" + (i < index ? " done" : i === index ? " here" : "");
+      pips.appendChild(p);
+    });
+  }
 
   stepsEl.textContent = "";
   steps = labels.map((label, i) => {
@@ -1226,13 +1356,21 @@ function tally(){
 
   QUESTIONS.forEach((item, i) => {
     const pick = picks[i];
-    if (pick === undefined || !(item.trait in sum)) return;
+    if (pick === undefined) return;
+
+    /* a question may feed several results at once */
+    const targets = item.scores || (item.trait ? { [item.trait]: 1 } : {});
 
     const n = scaleOf(item).length;
-    const value = item.reverse ? n - pick : pick + 1;
+    const agree = (item.reverse ? n - pick : pick + 1) / n;   /* 0 - 1 */
 
-    sum[item.trait] += value / n;
-    seen[item.trait] += 1;
+    for (const id in targets){
+      if (!(id in sum)) continue;
+      const weight = targets[id];
+      /* a negative weight means agreeing counts AGAINST that result */
+      sum[id]  += (weight < 0 ? 1 - agree : agree) * Math.abs(weight);
+      seen[id] += Math.abs(weight);
+    }
   });
 
   const out = {};
@@ -1311,7 +1449,10 @@ function finish(special){
   if (SHOW_TALLY){
     const winId = special ? null : winner;   /* the Wight wins nothing on the scale */
 
-    ids.slice().sort((a, b) => score[b] - score[a]).forEach(id => {
+    ids.slice()
+       .sort((a, b) => score[b] - score[a])
+       .slice(0, TALLY_TOP)
+       .forEach(id => {
       const row = document.createElement("div");
       row.className = "tally-row" + (id === winId ? " win" : "");
 
