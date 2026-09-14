@@ -1361,9 +1361,35 @@ let hoverPool = [];      /* several copies so quick moves can overlap */
 let hoverNext = 0;
 let music = null;
 let lastHoverAt = 0;
-let musicWanted = false;
+let musicWanted = true;           /* wanted from the moment the page opens */
 let unlocked = false;
 let currentTrack = MUSIC_TRACK;   /* a result may swap this out */
+
+const MUSIC_KEY = "ash-queen-music";
+let spotSavedAt = 0;
+
+function saveSpot(){
+  if (!music) return;
+  try{
+    localStorage.setItem(MUSIC_KEY, JSON.stringify({
+      track: currentTrack,
+      at: music.currentTime || 0
+    }));
+  }catch(e){}
+}
+
+function loadSpot(){
+  try{ return JSON.parse(localStorage.getItem(MUSIC_KEY) || "null"); }
+  catch(e){ return null; }
+}
+
+/* currentTime cannot be set until the file has its metadata */
+function seekTo(seconds){
+  if (!music || !isFinite(seconds) || seconds <= 0) return;
+  const go = () => { try{ music.currentTime = seconds; }catch(e){} };
+  if (music.readyState >= 1) go();
+  else music.addEventListener("loadedmetadata", go, { once: true });
+}
 
 function initAudio(){
   for (let i = 0; i < 4; i++){
@@ -1375,6 +1401,18 @@ function initAudio(){
   music = new Audio(asset(MUSIC_TRACK));
   music.loop = true;
   music.preload = "auto";
+
+  /* jot the position down about once a second, and on the way out */
+  music.addEventListener("timeupdate", () => {
+    const now = performance.now();
+    if (now - spotSavedAt < 1000) return;
+    spotSavedAt = now;
+    saveSpot();
+  });
+  window.addEventListener("pagehide", saveSpot);
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") saveSpot();
+  });
 }
 
 /* A browser refuses to play anything until the page has been interacted
@@ -1426,6 +1464,7 @@ function useMusic(track){
   music.pause();
   music.currentTime = 0;
   music.src = asset(want);
+  saveSpot();
   applyMusic();
 }
 
@@ -1907,7 +1946,18 @@ standing.textContent = STANDING_QUESTION;
 
 loadSettings();
 initAudio();
-applySettings();
+
+/* pick the track back up where the last visit left it */
+const spot = loadSpot();
+if (spot && spot.track === currentTrack) seekTo(spot.at);
+
+applySettings();               // this already tries to play
+
+/* A browser will refuse audio until the page has been interacted with.
+   If it refused just now, the first click or key press starts it. */
+["pointerdown", "keydown"].forEach(ev => {
+  document.addEventListener(ev, () => { unlockAudio(); applyMusic(); }, { once: true });
+});
 
 /* settings panel */
 const cog = $("cog");
@@ -1956,8 +2006,7 @@ $("set-sound").addEventListener("input", e => {
 /* buttons */
 $("begin").addEventListener("click", () => {
   unlockAudio();
-  musicWanted = true;        // a real gesture: browsers will allow audio now
-  applyMusic();
+  applyMusic();              // in case the browser was still holding it back
   show("age");
 });
 
