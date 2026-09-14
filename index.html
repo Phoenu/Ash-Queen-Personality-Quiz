@@ -676,12 +676,14 @@ const DEFAULT_SETTINGS = { background: true, music: 40, sound: 70 };
 
 /* ---------------------------------------------------------------------
    THE CHALLENGE
-   Asked only when every answer sat on the middle of the scale.
-   Answering "No" to either sends them back to the first statement.
+   Asked of everyone once the last statement is answered.
+
+     onNo: "retake"  send them back to the first statement
+     onNo: "wight"   they become the Woe-Begotten Wight
    --------------------------------------------------------------------- */
 const CHALLENGE = [
-  "Are you satisfied with your selection?",
-  "Were you honest with your answers?"
+  { q: "Are you satisfied with your selection?", onNo: "retake" },
+  { q: "Were you honest with your answers?",     onNo: "wight"  }
 ];
 
 /* ---------------------------------------------------------------------
@@ -800,14 +802,54 @@ const TRAITS = {
     label: "Eggman, The Alchemist",
     image: "The_alchmist.png",
     accent: "#a51818",
-    body: ["Description not yet written."]
+    body: [
+      "The Alchemist is the art of transformation: turning what is broken into something useful, what is useless into something powerful, and what is natural into something that should never have existed. Within a kingdom built upon conquest and control, the Alchemist is the one who understands that knowledge is power, and power is rarely given without a price.",
+
+      "It makes you the kind of person who looks at the world not as it is, but as it could be changed. You seek answers where others see taboos, experiment where others hesitate, and make use of whatever materials are placed before you. When the Queen demands a miracle, you are the person expected to create it. You do not want to disappoint her, do you?"
+    ],
+    lead: "But an Alchemist must always ask themselves one question:",
+    folly: "Just because something can be created, does that mean it should be?",
+    shadow: {
+      title: "The Shadow of your soul",
+      text: [
+        "The greatest danger of an Alchemist is forgetting that the things they experiment upon are more than ingredients.",
+
+        "An unhealthy Alchemist may become exploitative, seeing people, creatures, and even their own allies as resources waiting to be used. You may take what someone can offer while giving little thought to what they lose in return. The needs of others become secondary to what they can provide you, even when they are suffering because of it.",
+
+        "Hubris is an even greater poison. You may begin to believe that your own judgment is superior to everyone else’s, making advice feel like an affront rather than something worth hearing. The more certain you become, the harder it is to recognize when you are wrong, especially when others try to warn you.",
+
+        "Worst of all is vindictiveness. A wrong committed against you may linger longer after it should have been forgotten, growing into resentment until punishment feels justified. You may struggle to forgive, seeking to make others hurt simply because they once made you hurt. Eventually, revenge can become more important than peace, and hatred more comforting than letting go.",
+
+        "The most dangerous Alchemist isn't the one who knows too little. It is the one who knows enough to believe they are incapable of being wrong."
+      ]
+    }
   },
 
   silver: {
-    label: "Silver, The Jester",
+    label: "Silver, The Jester/Bard",
     image: "the_Jester.png",
     accent: "#acc4c2",
-    body: ["Description not yet written."]
+    body: [
+      "The Jester and Bard are the keepers of mirth: performers who turn sorrow into laughter, mockery into entertainment, and even the most mocking gestures that would befuddle most in other positions only cause rise for the entertainer. They are given the strange curse of speaking truths others cannot, so long as those truths are hidden behind a song, a jest, or a smile.",
+
+      "It makes you the kind of person who stands before a crowd and demands their attention, whether through music, humor, or spectacle. You entertain the court, lift the spirits of the people, and remind them that even beneath the Queen’s shadow, there is still room for laughter. When the Queen demands a celebration however, you are the one expected to make them smile. Their position is one of the most lethal in the kingdom, for the line between entertainment and insult is thin, and the Queen is not known for forgiving those who cross it."
+    ],
+    lead: "A Jester and a Bard are two halves of the same coin, each carrying the same question beneath the laughter:",
+    folly: "If everyone is laughing at your joke, how do you know they are not laughing at you?",
+    shadow: {
+      title: "The Shadow of your soul",
+      text: [
+        "The greatest danger of the entertainer is forgetting that the performance is not always about you.",
+
+        "An unhealthy Jester and Bard may become egotistical, believing their worth is measured by how many eyes turn toward them. Praise becomes something expected rather than earned, and when attention begins to fade, they may feel as though they themselves have been diminished. The need to be admired can become stronger than the desire to be understood.",
+
+        "Self-Absorption can make this worse. You may become so concerned with how others perceive you that their feelings, struggles, and accomplishments begin to feel secondary. Every conversation becomes another stage, every achievement another opportunity to prove yourself, and every person around you another audience. Even those closest to you may begin to feel invisible.",
+
+        "Worst of all is your inability to be the butt of the joke. You can laugh when others become humiliated, but when the laughter turns towards you, it becomes an insult. A harmless jest can become a wound to your pride, and a moment of embarrassment can become something you feel compelled to avenge. You may forgive cruelty done to others before you forgive embarrassment of yourself.",
+
+        "The most dangerous Jester isn’t the one who cannot make others laugh. It is the one who cannot bear to be laughed at."
+      ]
+    }
   }
 };
 
@@ -820,7 +862,18 @@ const TRAITS = {
 const WIGHT = {
   label: "The Woe-Begotten Wight",
   accent: "#ffffff",
-  body: ["Description not yet written."]
+  body: [
+    "A Woe-Begotten Wight is a creature born from uncertainty, dishonesty, and a soul that refuses to take shape. It is neither one thing nor another, bearing only a mishapened form where a true identity ought to be.",
+
+    "Some become Wights because they stand without conviction. Others sought to deceive the judgment placed before them, giving answers they believed would be pleasing rather than truthful. In either case, the result is the same: a being formed from contradictions, half-truths, and borrowed pieces, with no character of its own.",
+
+    "Yet a Wight is not merely empty.",
+
+    "It is developed. Every uncertainty, every dishonest answer, every refusal to declare what one truly is becomes another piece of its malformed body. Given time, the creature grows larger and more defined, though never more whole. What emerges is a thing that has been given shape without ever being given purpose.",
+
+    "And so the Woe-Begotten Wight is regarded as little more than refuse given flesh—a failed creation wandering in search of an identity it should have possessed from the beginning."
+  ],
+  folly: "For a soul that refuses to reveal what it is may, in time, become nothing worth revealing."
 };
 
 /* ---------------------------------------------------------------------
@@ -1147,16 +1200,21 @@ let challengeAt = 0;
 
 function askChallenge(i){
   challengeAt = i;
-  $("challenge-q").textContent = CHALLENGE[i];
+  $("challenge-q").textContent = CHALLENGE[i].q;
   show("check");
 }
 
 function answerChallenge(yes){
-  if (!yes){ start(); return; }                        /* back to the first statement */
+  if (!yes){
+    /* admitting to lying shapes them into the Wight; anything else is a retake */
+    if (CHALLENGE[challengeAt].onNo === "wight") finish(WIGHT);
+    else start();
+    return;
+  }
 
   if (challengeAt < CHALLENGE.length - 1){ askChallenge(challengeAt + 1); return; }
 
-  /* stood by their answers - but if the scale never moved, that is the Wight */
+  /* stood by their answers - but if the scale never moved, that is the Wight too */
   finish(allNeutral() ? WIGHT : null);
 }
 
