@@ -119,6 +119,7 @@
     border:1px solid var(--gold-dim);
     background:var(--ink);
     padding:clamp(26px,5vw,46px);
+    transition:border-color .4s ease;
   }
   .plate::before{
     content:"";
@@ -163,6 +164,10 @@
   @media (prefers-reduced-motion:reduce){
     .omen{animation:none}
   }
+
+  /* while she is the one speaking, the gold frame is not hers to wear */
+  .plate.unframed,
+  .plate.unframed::before{border-color:transparent}
 
   /* A question can take the plate over: --mood is set from its own entry
      and everything that was gold follows it, frame and statement included. */
@@ -1481,6 +1486,7 @@ let busy = false;
 
 function show(name){
   for (const k in screens) screens[k].classList.toggle("on", k === name);
+  if (plateEl) plateEl.classList.toggle("unframed", name === "aside");
   if (name !== "quiz"){
     const omen = $("omen");
     if (omen){ omen.hidden = true; omen.removeAttribute("src"); }
