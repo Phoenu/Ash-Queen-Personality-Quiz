@@ -916,11 +916,11 @@
     <!-- ===================== AGE ===================== -->
     <section class="screen" id="s-age">
       <div class="challenge">
-        <p class="challenge-q">Ere thou beginnest &mdash; hast thou seyn eighteen winters pass?</p>
+        <p class="challenge-q">Ere thou beginnest &mdash; art thou eighteen years or more?</p>
       </div>
       <div class="challenge-row">
-        <button class="btn" id="age-over">Aye, and more</button>
-        <button class="btn-quiet" id="age-under">Nay, fewer</button>
+        <button class="btn" id="age-over">Aye</button>
+        <button class="btn-quiet" id="age-under">Nay</button>
       </div>
     </section>
 
@@ -2324,7 +2324,7 @@ function renderAnswers(){
     list.appendChild(row);
   };
 
-  if (age) line("-", "Hast thou seyn eighteen winters pass?", age);
+  if (age) line("-", "Art thou eighteen years or more?", age);
 
   order.forEach((srcIndex, i) => {
     const item = QUESTIONS[srcIndex];
@@ -2455,8 +2455,8 @@ function answerAge(value){
   start();
 }
 
-$("age-over").addEventListener("click", () => answerAge("Eighteen winters or more"));
-$("age-under").addEventListener("click", () => answerAge("Fewer than eighteen winters"));
+$("age-over").addEventListener("click", () => answerAge("Eighteen or more"));
+$("age-under").addEventListener("click", () => answerAge("Under eighteen"));
 $("back").addEventListener("click", back);
 $("say-yes").addEventListener("click", () => answerChallenge(true));
 $("say-no").addEventListener("click", () => answerChallenge(false));
