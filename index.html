@@ -411,6 +411,7 @@
     object-fit:contain;
     flex:none;
   }
+  .verdict-art[hidden]{display:none}
   .verdict-copy{flex:1 1 240px;min-width:0}
 
   .eyebrow{
@@ -630,9 +631,14 @@
 const QUIZ_TITLE = "Ash Queen Personality Test";
 const QUIZ_INTRO = "Find out what kind of poor soul you truly are";
 
-const CREST = "crest.png";                 // the selector image, and the default result image
+const CREST = "crest.png";                 // the selector image
 const STANDING_QUESTION = "Who are you?";  // sits above the questions. "" removes it.
 const SHOW_TALLY = true;                   // score bars on the result screen
+
+/* Bump this whenever you REPLACE a picture or sound while keeping its
+   filename. Browsers cache assets hard, and without a new stamp they
+   will happily keep serving you the old file. */
+const ASSET_VERSION = "6";
 
 /* ---------------------------------------------------------------------
    AUDIO
@@ -713,12 +719,35 @@ const TRAITS = {
     }
   },
 
-  /* --- the four below are named but not yet written --- */
+  /* --- pictures and colours set; the writing is still to come --- */
 
-  tails:    { label: "Tails, The Blacksmith/Merchant", body: ["Description not yet written."] },
-  knuckles: { label: "Knuckles, The Wright",           body: ["Description not yet written."] },
-  eggman:   { label: "Eggman, The Alchemist",          body: ["Description not yet written."] },
-  silver:   { label: "Silver, The Jester",             body: ["Description not yet written."] }
+  tails: {
+    label: "Tails, The Blacksmith/Merchant",
+    image: "The_blacksmith.png",
+    accent: "#efc523",
+    body: ["Description not yet written."]
+  },
+
+  knuckles: {
+    label: "Knuckles, The Wright",
+    image: "the_wright.png",
+    accent: "#ffffff",
+    body: ["Description not yet written."]
+  },
+
+  eggman: {
+    label: "Eggman, The Alchemist",
+    image: "The_alchmist.png",
+    accent: "#a51818",
+    body: ["Description not yet written."]
+  },
+
+  silver: {
+    label: "Silver, The Jester",
+    image: "the_Jester.png",
+    accent: "#acc4c2",
+    body: ["Description not yet written."]
+  }
 };
 
 /* ---------------------------------------------------------------------
@@ -767,6 +796,10 @@ function show(name){
 
 function scaleOf(q){ return SCALES[q.scale || DEFAULT_SCALE]; }
 function middleOf(q){ return Math.floor(scaleOf(q).length / 2); }
+
+/* every picture and sound goes through here, so a version bump
+   forces the browser to fetch the new file instead of its cached one */
+function asset(path){ return path + "?v=" + ASSET_VERSION; }
 
 /* ---------------- the accent swap ---------------- */
 
@@ -831,10 +864,10 @@ let lastHoverAt = 0;
 let musicWanted = false;
 
 function initAudio(){
-  hoverSound = new Audio(SOUND_HOVER);
+  hoverSound = new Audio(asset(SOUND_HOVER));
   hoverSound.preload = "auto";
 
-  music = new Audio(MUSIC_TRACK);
+  music = new Audio(asset(MUSIC_TRACK));
   music.loop = true;
   music.preload = "auto";
 }
@@ -1065,9 +1098,17 @@ function finish(){
 
   useAccent(result.accent || null);
 
+  /* No silent swap to the crest: a result with no picture shows none,
+     and a picture that fails to load stays hidden rather than pretending. */
   const pic = $("verdict-art");
-  pic.onerror = () => { pic.onerror = null; pic.src = CREST; };
-  pic.src = result.image || CREST;
+  if (result.image){
+    pic.hidden = false;
+    pic.onerror = () => { pic.hidden = true; };
+    pic.src = asset(result.image);
+  }else{
+    pic.hidden = true;
+    pic.removeAttribute("src");
+  }
 
   $("verdict-title").textContent = result.label;
   paragraphsInto($("verdict-body"), result.body);
@@ -1174,7 +1215,7 @@ cursorImg.addEventListener("error", () => {
   $("crest-fallback").hidden = false;
 });
 
-[cursorImg, $("crest-start")].forEach(img => { img.src = CREST; });
+[cursorImg, $("crest-start")].forEach(img => { img.src = asset(CREST); });
 
 $("title").textContent = QUIZ_TITLE;
 $("intro").textContent = QUIZ_INTRO;
