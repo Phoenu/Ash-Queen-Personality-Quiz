@@ -1022,6 +1022,10 @@ const ASSET_VERSION = "7";
      MUSIC_TRACK  loops in the background once the quiz starts.
    --------------------------------------------------------------------- */
 const SOUND_HOVER = "Clicky.mp3";
+
+/* Played on the result screen by any vessel that has not named a track of
+   its own - so all five take it, and the Wight keeps its own. */
+const RESULT_MUSIC = "Cheyo.mp3";
 const MUSIC_TRACK = "Music.mp3";
 
 /* ---------------------------------------------------------------------
@@ -2150,7 +2154,7 @@ function finish(special){
 
   useAccent(result.accent || null);
   useBackground(result.background || null);
-  useMusic(result.music || null);
+  useMusic(result.music || RESULT_MUSIC || null);
 
   /* No silent swap to the crest: a result with no picture shows none,
      and a picture that fails to load stays hidden rather than pretending. */
