@@ -10,11 +10,11 @@
 <meta property="og:image" content="crest.png">
 <meta name="theme-color" content="#000000">
 <title>Ash Queen Personality Test</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Karla:ital,wght@0,400;0,600;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Karla:ital,wght@0,400;0,600;1,400&family=MedievalSharp&display=swap">
 <style>
   :root{
     --ink:#000;
-    --gold:#f2a73b;
+    --gold:var(--accent);
     --gold-dim:#7d5a22;
     --gold-faint:rgba(242,167,59,.22);
     --purple:#7b1e86;
@@ -23,6 +23,13 @@
     --text:#f3e9dc;
     --muted:#9a8aa0;          /* grey pulled toward the crest purple */
     --wind:100ms;             /* the selector's wind-up. change it here. */
+
+    /* THE DISPLAY FACE. Swap this one line back to
+       "Cinzel, Georgia, serif" to undo the medieval look. */
+    --display:"MedievalSharp", Cinzel, Georgia, serif;
+
+    /* the accent a result paints with; --gold follows it */
+    --accent:#f2a73b;
   }
 
   *{box-sizing:border-box}
@@ -62,11 +69,41 @@
     backdrop-filter:blur(4px);
     -webkit-backdrop-filter:blur(4px);
   }
-  /* switching the background off puts the solid plate back */
-  body.bg-off .plate{
+  /* switching the background off puts the solid plate back.
+     Scoped to a scene so it leaves the parchment plate alone. */
+  body.bg-off.has-scene .plate{
     background:var(--ink);
     backdrop-filter:none;
     -webkit-backdrop-filter:none;
+  }
+
+  /* ---------------- the parchment plate ----------------
+     Set RESULT_PARCHMENT to null in the config to drop all of this. The
+     texture ships as grey grain; the colour below is multiplied into it,
+     so the paper can be re-tinted from here without touching the file. */
+  .plate.parchment{
+    background-color:#e0cfa6;
+    background-size:cover;
+    background-position:center;
+    background-repeat:no-repeat;
+    background-blend-mode:multiply;
+    border-color:#6d5a38;
+
+    /* the page reads dark on pale paper - every component follows these */
+    --text:#2b2117;
+    --muted:#584733;
+    --gold-dim:#7d6640;
+    --gold-faint:rgba(70,54,32,.32);
+    --gold:color-mix(in srgb, var(--accent) 62%, #211708);
+
+    color:var(--text);
+  }
+  .plate.parchment .btn{color:#f3ead6}
+  .plate.parchment .btn:hover{background:transparent;color:var(--gold)}
+  .plate.parchment .btn-dark{
+    color:#5e4e38;
+    background:rgba(255,255,255,.28);
+    border-color:#8a7350;
   }
 
   .wrap{
@@ -102,7 +139,7 @@
   .screen.on{display:block}
 
   h1,h2{
-    font-family:Cinzel,Georgia,serif;
+    font-family:var(--display);
     font-weight:700;
     letter-spacing:.06em;
     text-wrap:balance;
@@ -135,7 +172,7 @@
   :focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 
   .btn{
-    font-family:Cinzel,Georgia,serif;
+    font-family:var(--display);
     font-weight:700;
     font-size:14px;
     letter-spacing:.14em;
@@ -257,7 +294,7 @@
   /* ---------------- the standing question ---------------- */
 
   .standing{
-    font-family:Cinzel,Georgia,serif;
+    font-family:var(--display);
     font-size:clamp(19px,3.8vw,27px);
     font-weight:700;
     letter-spacing:.07em;
@@ -311,7 +348,7 @@
   /* ---------------- the statement ---------------- */
 
   .statement{
-    font-family:Cinzel,Georgia,serif;
+    font-family:var(--display);
     font-size:clamp(19px,3.5vw,26px);
     font-weight:500;
     line-height:1.42;
@@ -425,7 +462,7 @@
     align-items:center;
   }
   .challenge-q{
-    font-family:Cinzel,Georgia,serif;
+    font-family:var(--display);
     font-size:clamp(20px,3.8vw,28px);
     font-weight:500;
     line-height:1.4;
@@ -477,7 +514,7 @@
     margin:0 0 12px;
   }
   .folly-q{
-    font-family:Cinzel,Georgia,serif;
+    font-family:var(--display);
     font-size:clamp(17px,3vw,21px);
     line-height:1.45;
     color:var(--gold);
@@ -519,7 +556,7 @@
     display:block;
   }
   .tally-name{
-    font-family:Cinzel,Georgia,serif;
+    font-family:var(--display);
     letter-spacing:.03em;
     font-size:12.5px;
     min-width:0;
@@ -540,7 +577,7 @@
   }
   .others[hidden]{display:none}
   .others h3{
-    font-family:Cinzel,Georgia,serif;
+    font-family:var(--display);
     font-size:clamp(14px,2.4vw,17px);
     font-weight:700;
     letter-spacing:.16em;
@@ -569,7 +606,7 @@
 
   /* deliberately dimmer than the others - it throws the run away */
   .btn-dark{
-    font-family:Cinzel,Georgia,serif;
+    font-family:var(--display);
     font-size:11.5px;
     letter-spacing:.14em;
     text-transform:uppercase;
@@ -600,7 +637,7 @@
   }
   .vessel-copy{flex:1 1 220px;min-width:0}
   .vessel h3{
-    font-family:Cinzel,Georgia,serif;
+    font-family:var(--display);
     font-size:16px;
     letter-spacing:.05em;
     text-transform:uppercase;
@@ -846,6 +883,11 @@ const CREST = "crest.png";                 // the selector image
 const STANDING_QUESTION = "Who are you?";  // sits above the questions. "" removes it.
 const SHOW_TALLY = true;                   // score bars on the result screen
 const TALLY_TOP = 5;                       // how many vessels to list
+
+/* THE PAPER BEHIND A RESULT. Set this to null for the plain black plate -
+   that one line undoes the whole parchment look. The Wight never takes it;
+   it brings its own scene. */
+const RESULT_PARCHMENT = "parchment.png";
 
 /* Bump this whenever you REPLACE a picture or sound while keeping its
    filename. Browsers cache assets hard, and without a new stamp they
@@ -1277,13 +1319,13 @@ function hexParts(hex){
 function useAccent(hex){
   const root = document.documentElement;
   if (!hex){
-    root.style.removeProperty("--gold");
+    root.style.removeProperty("--accent");
     root.style.removeProperty("--gold-dim");
     root.style.removeProperty("--gold-faint");
     return;
   }
   const [r, g, b] = hexParts(hex);
-  root.style.setProperty("--gold", hex);
+  root.style.setProperty("--accent", hex);
   root.style.setProperty("--gold-dim",
     "rgb(" + Math.round(r * .72) + "," + Math.round(g * .72) + "," + Math.round(b * .72) + ")");
   root.style.setProperty("--gold-faint", "rgba(" + r + "," + g + "," + b + ",.34)");
@@ -1308,6 +1350,15 @@ function loadRun(){
 
 function clearRun(){
   try{ localStorage.removeItem(RUN_KEY); }catch(e){}
+}
+
+/* the paper the result is written on */
+const plateEl = document.querySelector(".plate");
+
+function useParchment(on){
+  if (!plateEl) return;
+  plateEl.classList.toggle("parchment", !!on);
+  plateEl.style.backgroundImage = on ? "url('" + asset(RESULT_PARCHMENT) + "')" : "";
 }
 
 /* the scene behind the plate, for a result that carries one */
@@ -1476,6 +1527,7 @@ function start(){
   useAccent(null);                    // back to gold for the questions
   useBackground(null);
   useMusic(null);
+  useParchment(false);
   standing.hidden = !STANDING_QUESTION;
   show("quiz");
   render();
@@ -1687,6 +1739,10 @@ function tally(){
   return out;
 }
 
+/* a slash is the only sensible place to break "Blacksmith/Merchant";
+   without this the browser snaps it mid-word instead */
+function breakable(label){ return label.split("/").join("/" + String.fromCharCode(8203)); }
+
 /* "Sonic, The Messenger" -> "Sonic" */
 function shortName(label){ return label.split(",")[0].trim(); }
 
@@ -1724,6 +1780,7 @@ function finish(special){
   useAccent(result.accent || null);
   useBackground(result.background || null);
   useMusic(result.music || null);
+  useParchment(RESULT_PARCHMENT && !special);   /* the Wight keeps the black plate */
 
   /* No silent swap to the crest: a result with no picture shows none,
      and a picture that fails to load stays hidden rather than pretending. */
@@ -1737,7 +1794,7 @@ function finish(special){
     pic.removeAttribute("src");
   }
 
-  $("verdict-title").textContent = result.label;
+  $("verdict-title").textContent = breakable(result.label);
   paragraphsInto($("verdict-body"), result.body);
 
   const follyBox = $("verdict-folly");
@@ -1803,7 +1860,7 @@ function finish(special){
 
       const name = document.createElement("span");
       name.className = "tally-name";
-      name.textContent = TRAITS[id].label;
+      name.textContent = breakable(TRAITS[id].label);
 
       const track = document.createElement("span");
       track.className = "tally-track";
@@ -1855,7 +1912,7 @@ function renderVessels(){
     copy.className = "vessel-copy";
 
     const h = document.createElement("h3");
-    h.textContent = v.label;
+    h.textContent = breakable(v.label);
     copy.appendChild(h);
 
     (v.body || []).forEach(text => {
@@ -2033,6 +2090,7 @@ $("reset").addEventListener("click", () => {
   useAccent(null);
   useBackground(null);
   useMusic(null);
+  useParchment(false);
   standing.hidden = true;
   show("start");
 });
