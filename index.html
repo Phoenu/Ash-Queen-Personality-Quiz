@@ -261,7 +261,13 @@
   /* too many questions for dots - use a bar instead */
   .meter{flex:1;height:3px;background:var(--gold-faint)}
   .meter[hidden]{display:none}
-  .meter-fill{height:100%;background:var(--gold);width:0;transition:width .25s ease}
+  .meter-fill{
+    display:block;                 /* a span is inline - height would not apply */
+    height:100%;
+    width:0;
+    background:var(--gold);
+    transition:width .25s ease;
+  }
   .pip{
     width:9px;height:9px;
     transform:rotate(45deg);
@@ -498,7 +504,7 @@
     overflow-wrap:anywhere;
   }
   .tally-track{height:3px;background:var(--gold-faint)}
-  .tally-fill{height:100%;background:var(--gold-dim);width:0}
+  .tally-fill{display:block;height:100%;width:0;background:var(--gold-dim)}
   .tally-pct{font-variant-numeric:tabular-nums;font-size:12px}
   .tally-row.win{color:var(--gold)}
   .tally-row.win .tally-fill{background:var(--gold)}
@@ -1193,7 +1199,8 @@ function render(){
   meter.hidden = !many;
 
   if (many){
-    $("meter-fill").style.width = (index / QUESTIONS.length * 100) + "%";
+    /* full on the last question, so it agrees with the count beside it */
+    $("meter-fill").style.width = ((index + 1) / QUESTIONS.length * 100) + "%";
   }else{
     pips.textContent = "";
     QUESTIONS.forEach((_, i) => {
@@ -1316,8 +1323,12 @@ function back(){
   if (index > 0){ index--; render(); }
 }
 
-function allNeutral(){
-  return QUESTIONS.every((item, i) => picks[i] === middleOf(item));
+/* every statement answered with the same step - all Neutral, all Never,
+   all Strongly disagree. A single column of answers says nothing at all. */
+function allSame(){
+  const first = picks[0];
+  if (first === undefined) return false;
+  return QUESTIONS.every((item, i) => picks[i] === first);
 }
 
 function afterLast(){
@@ -1345,7 +1356,7 @@ function answerChallenge(yes){
   if (challengeAt < CHALLENGE.length - 1){ askChallenge(challengeAt + 1); return; }
 
   /* stood by their answers - but if the scale never moved, that is the Wight too */
-  finish(allNeutral() ? WIGHT : null);
+  finish(allSame() ? WIGHT : null);
 }
 
 /* ---------------- scoring ---------------- */
@@ -1442,11 +1453,12 @@ function finish(special){
     shadowBox.appendChild(wrap);
   }
 
+  /* the Wight is not a score - it gets no bars to sit beside */
   const box = $("tally");
   box.textContent = "";
-  box.hidden = !SHOW_TALLY;
+  box.hidden = !SHOW_TALLY || !!special;
 
-  if (SHOW_TALLY){
+  if (SHOW_TALLY && !special){
     const winId = special ? null : winner;   /* the Wight wins nothing on the scale */
 
     ids.slice()
