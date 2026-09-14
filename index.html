@@ -182,7 +182,22 @@
 
   /* ---------------- buttons ---------------- */
 
-  button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+  button{
+    font:inherit;
+    color:inherit;
+    background:none;
+    border:none;
+    cursor:pointer;
+    -webkit-user-select:none;
+    user-select:none;
+  }
+
+  /* the quiz is all controls - there is nothing on it worth selecting, and
+     a stray drag across it used to swallow the click that followed */
+  #s-quiz, #s-age, #s-check{
+    -webkit-user-select:none;
+    user-select:none;
+  }
   :focus-visible{outline:2px solid var(--gold);outline-offset:3px}
 
   .btn{
@@ -1345,6 +1360,7 @@ const WIND = parseInt(getComputedStyle(document.documentElement)
 
 let order = [];     // the order this run asks them in
 let sealed = new Set();   // slots answered once and never offered again
+let busyGuard = null;     // releases the click lock if a move never lands
 let index = 0;      // current question
 let picks = [];     // picks[i] = chosen step, or undefined
 let hover = 0;      // where the selector is sitting
@@ -1645,6 +1661,14 @@ function start(){
 }
 
 function render(){
+  /* nothing from the last question should still be in flight */
+  clearTimeout(winding);
+  clearTimeout(busyGuard);
+  winding = null;
+  target = null;
+  afterLanding = null;
+  busy = false;
+
   const item = qAt(index);
   const labels = scaleOf(item);
 
@@ -1752,7 +1776,10 @@ let target = null;
 let afterLanding = null;
 
 function moveTo(i, after){
-  if (i < 0 || i >= steps.length) return;
+  /* Out of range: there is nothing to move to, but whoever called still
+     has to hear back - dropping the callback here is what used to leave
+     choose() stuck on busy, and every later click ignored. */
+  if (i < 0 || i >= steps.length){ if (after) after(); return; }
   if (i === hover && !after) return;
 
   target = i;
@@ -1791,9 +1818,17 @@ function land(){
 
 function choose(i){
   if (busy) return;
+  if (i < 0 || i >= steps.length) return;
+
   busy = true;
 
+  /* last resort: if the move never reports back, let go of the lock anyway
+     rather than leaving the quiz unclickable */
+  clearTimeout(busyGuard);
+  busyGuard = setTimeout(() => { busy = false; }, 1500);
+
   const commit = () => {
+    clearTimeout(busyGuard);
     picks[index] = i;
     if (qAt(index).once) sealed.add(index);   /* asked once, then closed */
     paint();
