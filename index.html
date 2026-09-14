@@ -1,0 +1,1242 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Find out what kind of poor soul you truly are.">
+<link rel="icon" href="crest.png">
+<meta property="og:title" content="Ash Queen Personality Test">
+<meta property="og:description" content="Find out what kind of poor soul you truly are.">
+<meta property="og:image" content="crest.png">
+<meta name="theme-color" content="#000000">
+<title>Ash Queen Personality Test</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Karla:ital,wght@0,400;0,600;1,400&display=swap">
+<style>
+  :root{
+    --ink:#000;
+    --gold:#f2a73b;
+    --gold-dim:#7d5a22;
+    --gold-faint:rgba(242,167,59,.22);
+    --purple:#7b1e86;
+    --orchid:#c0459f;
+    --ember:#f0592b;
+    --text:#f3e9dc;
+    --muted:#9a8aa0;          /* grey pulled toward the crest purple */
+    --wind:100ms;             /* the selector's wind-up. change it here. */
+  }
+
+  *{box-sizing:border-box}
+
+  body{
+    background:var(--ink);
+    color:var(--text);
+    font-family:Karla,"Segoe UI",system-ui,sans-serif;
+    font-size:16px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* the background layer. empty for now - drop an image, video or canvas
+     in here later and the settings toggle already controls it. */
+  #quizBackground{
+    position:fixed;
+    inset:0;
+    z-index:-1;
+    pointer-events:none;
+    background:var(--ink);
+  }
+  body.bg-off #quizBackground{display:none}
+
+  .wrap{
+    min-height:100vh;
+    display:flex;
+    align-items:flex-start;
+    justify-content:center;
+    padding-block:40px;
+    padding-left:18px;
+    padding-right:18px;
+  }
+
+  /* ---------------- the plate ---------------- */
+
+  .plate{
+    position:relative;
+    width:100%;
+    max-width:680px;
+    margin-block:auto;
+    border:1px solid var(--gold-dim);
+    background:var(--ink);
+    padding:clamp(26px,5vw,46px);
+  }
+  .plate::before{
+    content:"";
+    position:absolute;
+    inset:6px;
+    border:1px solid var(--gold-faint);
+    pointer-events:none;
+  }
+
+  .screen{display:none}
+  .screen.on{display:block}
+
+  h1,h2{
+    font-family:Cinzel,Georgia,serif;
+    font-weight:700;
+    letter-spacing:.06em;
+    text-wrap:balance;
+    margin:0;
+  }
+  h1{
+    font-size:clamp(25px,5.2vw,37px);
+    line-height:1.15;
+    color:var(--gold);
+    text-transform:uppercase;
+  }
+
+  .rule{
+    height:1px;
+    background:linear-gradient(90deg,transparent,var(--gold-dim),transparent);
+    margin:18px 0 24px;
+  }
+
+  .lede{
+    color:var(--muted);
+    margin:0 0 30px;
+    max-width:54ch;
+  }
+
+  /* ---------------- buttons ---------------- */
+
+  button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+  :focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+
+  .btn{
+    font-family:Cinzel,Georgia,serif;
+    font-weight:700;
+    font-size:14px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    padding:13px 30px;
+    color:var(--ink);
+    background:var(--gold);
+    border:1px solid var(--gold);
+    transition:background .14s,color .14s;
+  }
+  .btn:hover{background:transparent;color:var(--gold)}
+
+  .btn-quiet{
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--muted);
+    padding:9px 16px;
+    border:1px solid var(--gold-faint);
+    transition:color .14s,border-color .14s;
+  }
+  .btn-quiet:hover{color:var(--gold);border-color:var(--gold-dim)}
+
+  /* ---------------- settings ---------------- */
+
+  .cog{
+    position:absolute;
+    top:12px;right:12px;
+    width:34px;height:34px;
+    display:grid;
+    place-items:center;
+    color:var(--gold-dim);
+    z-index:3;
+    transition:color .15s,transform .25s ease;
+  }
+  .cog:hover{color:var(--gold);transform:rotate(35deg)}
+  .cog svg{width:19px;height:19px;display:block}
+
+  .settings{
+    position:absolute;
+    top:52px;right:12px;
+    width:250px;
+    padding:18px;
+    background:var(--ink);
+    border:1px solid var(--gold-dim);
+    z-index:4;
+    display:none;
+  }
+  .settings.open{display:block}
+
+  .settings h2{
+    font-size:12px;
+    letter-spacing:.2em;
+    color:var(--muted);
+    text-transform:uppercase;
+    margin-bottom:16px;
+  }
+
+  .setting{margin-bottom:17px}
+  .setting:last-child{margin-bottom:0}
+
+  .setting-head{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    gap:10px;
+    margin-bottom:7px;
+  }
+  .setting-name{
+    font-size:12.5px;
+    letter-spacing:.09em;
+    text-transform:uppercase;
+    color:var(--text);
+  }
+  .setting-value{
+    font-size:11.5px;
+    color:var(--muted);
+    font-variant-numeric:tabular-nums;
+  }
+
+  .setting input[type=range]{
+    width:100%;
+    accent-color:var(--gold);
+    background:transparent;
+    cursor:pointer;
+  }
+
+  .toggle{
+    width:100%;
+    padding:7px 0;
+    font-size:11.5px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    border:1px solid var(--gold-faint);
+    color:var(--muted);
+    transition:color .14s,border-color .14s,background .14s;
+  }
+  .toggle[aria-pressed="true"]{
+    color:var(--ink);
+    background:var(--gold);
+    border-color:var(--gold);
+  }
+
+  /* ---------------- start screen ---------------- */
+
+  .opening{
+    display:flex;
+    align-items:center;
+    gap:clamp(18px,4vw,34px);
+    flex-wrap:wrap;
+  }
+  .opening-crest{
+    width:clamp(84px,17vw,122px);
+    flex:none;
+    filter:drop-shadow(0 0 16px rgba(192,69,159,.4));
+  }
+  .opening-copy{flex:1 1 260px;min-width:0}
+
+  /* ---------------- the standing question ---------------- */
+
+  .standing{
+    font-family:Cinzel,Georgia,serif;
+    font-size:clamp(19px,3.8vw,27px);
+    font-weight:700;
+    letter-spacing:.07em;
+    text-transform:uppercase;
+    color:var(--gold);
+    text-align:center;
+    margin:0 0 26px;
+    padding-bottom:20px;
+    border-bottom:1px solid var(--gold-faint);
+  }
+
+  /* ---------------- progress ---------------- */
+
+  .progress{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-bottom:26px;
+  }
+  .pips{display:flex;gap:7px}
+  .pip{
+    width:9px;height:9px;
+    transform:rotate(45deg);
+    border:1px solid var(--gold-dim);
+    transition:background .18s,border-color .18s;
+  }
+  .pip.done{background:var(--gold-dim);border-color:var(--gold-dim)}
+  .pip.here{background:var(--gold);border-color:var(--gold)}
+
+  .count{
+    font-size:12px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--muted);
+    font-variant-numeric:tabular-nums;
+    margin-left:auto;
+  }
+
+  /* ---------------- the statement ---------------- */
+
+  .statement{
+    font-family:Cinzel,Georgia,serif;
+    font-size:clamp(19px,3.5vw,26px);
+    font-weight:500;
+    line-height:1.42;
+    letter-spacing:.01em;
+    text-wrap:balance;
+    margin:0 0 8px;
+    min-height:2.9em;
+    color:var(--text);
+  }
+
+  /* ---------------- the scale ---------------- */
+
+  .scale{
+    position:relative;
+    padding-top:76px;
+    margin-bottom:28px;
+  }
+
+  .steps{
+    position:relative;
+    display:flex;
+    gap:2px;
+  }
+  .steps::before{
+    content:"";
+    position:absolute;
+    top:7px;left:10%;right:10%;
+    height:1px;
+    background:var(--gold-faint);
+  }
+
+  .step{
+    flex:1 1 0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+    padding:0 2px 6px;
+  }
+
+  .node{
+    width:15px;height:15px;
+    transform:rotate(45deg);
+    border:1px solid var(--gold-dim);
+    background:var(--ink);
+    transition:background .12s,border-color .12s,box-shadow .12s;
+    position:relative;
+    z-index:1;
+  }
+  .step.on .node{
+    border-color:var(--gold);
+    background:var(--gold);
+    box-shadow:0 0 10px rgba(242,167,59,.55);
+  }
+  .step.picked .node{background:var(--orchid);border-color:var(--orchid)}
+
+  .step-label{
+    font-size:11.5px;
+    line-height:1.35;
+    letter-spacing:.02em;
+    color:var(--muted);
+    text-align:center;
+    transition:color .12s;
+  }
+  .step.on .step-label{color:var(--gold)}
+
+  /* the selector ----------------------------- */
+
+  .selector{
+    position:absolute;
+    top:0;left:0;
+    width:46px;height:57px;
+    pointer-events:none;
+    transition:none;                  /* it never glides - it cuts */
+  }
+  .selector-art{
+    position:relative;
+    display:block;width:100%;height:100%;
+    transform-origin:50% 72%;
+    filter:drop-shadow(0 0 8px rgba(192,69,159,.55));
+  }
+  .selector-art img,
+  .selector-art svg{
+    position:absolute;inset:0;
+    width:100%;height:100%;
+    object-fit:contain;
+    display:block;
+  }
+  .selector-art [hidden]{display:none !important}
+
+  .selector-art.wind{animation:wind var(--wind) ease-in forwards}
+  .selector-art.land{animation:land 150ms cubic-bezier(.2,1.7,.4,1)}
+
+  @keyframes wind{
+    from{transform:scale(1) translateY(0)}
+    to  {transform:scale(.58) translateY(7px)}
+  }
+  @keyframes land{
+    0%  {transform:scale(.58) translateY(7px)}
+    52% {transform:scale(1.2) translateY(-3px)}
+    100%{transform:scale(1) translateY(0)}
+  }
+
+  .footer{display:flex;align-items:center;gap:12px}
+
+  /* ---------------- the challenge ---------------- */
+
+  .challenge{
+    min-height:clamp(140px,26vh,200px);
+    display:flex;
+    align-items:center;
+  }
+  .challenge-q{
+    font-family:Cinzel,Georgia,serif;
+    font-size:clamp(20px,3.8vw,28px);
+    font-weight:500;
+    line-height:1.4;
+    color:var(--text);
+    text-wrap:balance;
+    margin:0;
+  }
+  .challenge-row{display:flex;gap:12px;margin-top:8px}
+
+  /* ---------------- result ---------------- */
+
+  .verdict{display:flex;gap:clamp(18px,4vw,32px);align-items:center;flex-wrap:wrap}
+
+  /* sized by BOTH limits so a wide banner and a tall crest both fit */
+  .verdict-art{
+    width:auto;height:auto;
+    max-width:clamp(150px,36vw,250px);
+    max-height:170px;
+    object-fit:contain;
+    flex:none;
+  }
+  .verdict-copy{flex:1 1 240px;min-width:0}
+
+  .eyebrow{
+    font-size:11.5px;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--muted);
+    margin:0 0 9px;
+  }
+
+  .prose p{
+    color:var(--muted);
+    margin:0 0 1.15em;
+    max-width:62ch;
+  }
+  .prose{margin-top:26px}
+
+  .folly{
+    margin:30px 0;
+    padding:22px 24px;
+    border:1px solid var(--gold-faint);
+    border-left:2px solid var(--gold);
+  }
+  .folly-lead{
+    font-size:13.5px;
+    color:var(--muted);
+    margin:0 0 12px;
+  }
+  .folly-q{
+    font-family:Cinzel,Georgia,serif;
+    font-size:clamp(17px,3vw,21px);
+    line-height:1.45;
+    color:var(--gold);
+    margin:0;
+    text-wrap:balance;
+  }
+
+  .shadow{
+    margin-top:36px;
+    padding-top:26px;
+    border-top:1px solid var(--gold-faint);
+  }
+  .shadow h2{
+    font-size:clamp(19px,3.4vw,25px);
+    color:var(--gold);
+    text-transform:uppercase;
+    margin-bottom:18px;
+  }
+  .shadow p:last-child{color:var(--text)}
+
+  .tally{margin:34px 0 28px}
+  .tally-row{
+    display:grid;
+    grid-template-columns:minmax(120px,1.4fr) 1.8fr auto;
+    align-items:center;
+    gap:13px;
+    padding:7px 0;
+    font-size:13px;
+    color:var(--muted);
+    border-bottom:1px solid var(--gold-faint);
+  }
+  .tally-name{font-family:Cinzel,Georgia,serif;letter-spacing:.03em;font-size:12.5px}
+  .tally-track{height:4px;background:var(--gold-faint)}
+  .tally-fill{height:100%;background:var(--gold-dim);width:0}
+  .tally-pct{font-variant-numeric:tabular-nums;font-size:12px}
+  .tally-row.win{color:var(--gold)}
+  .tally-row.win .tally-fill{background:var(--gold)}
+
+  @media (prefers-reduced-motion:reduce){
+    .selector-art.wind,.selector-art.land{animation:none}
+    *{transition-duration:.01ms !important}
+  }
+
+  /* ---------------- narrow ---------------- */
+
+  @media (max-width:560px){
+    .scale{padding-top:0;padding-left:54px}
+    .steps{flex-direction:column;gap:7px}
+    .steps::before{display:none}
+    .step{
+      flex-direction:row;
+      justify-content:flex-start;
+      gap:14px;
+      padding:11px 14px;
+      border:1px solid var(--gold-faint);
+    }
+    .step.on{border-color:var(--gold-dim)}
+    .step-label{font-size:14px;text-align:left}
+    .selector{width:40px;height:50px}
+    .tally-row{grid-template-columns:1fr auto;gap:8px}
+    .tally-track{display:none}
+    .settings{width:calc(100% - 24px)}
+  }
+</style>
+</head>
+<body>
+
+<div id="quizBackground"></div>
+
+<div class="wrap">
+  <div class="plate">
+
+    <!-- ===================== SETTINGS ===================== -->
+    <button class="cog" id="cog" aria-label="Settings" aria-expanded="false">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="12" cy="12" r="3.2"/>
+        <path d="M12 2.6v3M12 18.4v3M2.6 12h3M18.4 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M18.7 5.3l-2.1 2.1M7.4 16.6l-2.1 2.1"
+              stroke-linecap="round"/>
+      </svg>
+    </button>
+
+    <div class="settings" id="settings" role="dialog" aria-label="Settings">
+      <h2>Settings</h2>
+
+      <div class="setting">
+        <div class="setting-head"><span class="setting-name">Background</span></div>
+        <button class="toggle" id="set-background" aria-pressed="true">Enabled</button>
+      </div>
+
+      <div class="setting">
+        <div class="setting-head">
+          <span class="setting-name">Music</span>
+          <span class="setting-value" id="music-value">40</span>
+        </div>
+        <input type="range" id="set-music" min="0" max="100" step="1" value="40">
+      </div>
+
+      <div class="setting">
+        <div class="setting-head">
+          <span class="setting-name">Sound</span>
+          <span class="setting-value" id="sound-value">70</span>
+        </div>
+        <input type="range" id="set-sound" min="0" max="100" step="1" value="70">
+      </div>
+    </div>
+
+    <!-- the question that stays overhead through the quiz -->
+    <p class="standing" id="standing" hidden></p>
+
+    <!-- ===================== START ===================== -->
+    <section class="screen on" id="s-start">
+      <div class="opening">
+        <img class="opening-crest" id="crest-start" alt="">
+        <div class="opening-copy">
+          <h1 id="title"></h1>
+          <div class="rule"></div>
+          <p class="lede" id="intro"></p>
+          <button class="btn" id="begin">Begin</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== QUIZ ===================== -->
+    <section class="screen" id="s-quiz">
+      <div class="progress">
+        <div class="pips" id="pips"></div>
+        <span class="count" id="count"></span>
+      </div>
+
+      <p class="statement" id="statement" aria-live="polite"></p>
+
+      <div class="scale" id="scale">
+        <div class="selector" id="selector" aria-hidden="true">
+          <div class="selector-art" id="selector-art">
+            <img id="crest-cursor" alt="">
+            <svg id="crest-fallback" viewBox="0 0 32 36" hidden>
+              <path d="M16 1.5 L30.5 6.5 V19 C30.5 27 24 32.5 16 34.5 C8 32.5 1.5 27 1.5 19 V6.5 Z"
+                    fill="none" stroke="#f2a73b" stroke-width="2.2" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        <div class="steps" id="steps"></div>
+      </div>
+
+      <div class="footer">
+        <button class="btn-quiet" id="back">Back</button>
+      </div>
+    </section>
+
+    <!-- ===================== THE CHALLENGE ===================== -->
+    <section class="screen" id="s-check">
+      <div class="challenge">
+        <p class="challenge-q" id="challenge-q" aria-live="polite"></p>
+      </div>
+      <div class="challenge-row">
+        <button class="btn" id="say-yes">Yes</button>
+        <button class="btn-quiet" id="say-no">No</button>
+      </div>
+    </section>
+
+    <!-- ===================== RESULT ===================== -->
+    <section class="screen" id="s-result">
+      <div class="verdict">
+        <img class="verdict-art" id="verdict-art" alt="">
+        <div class="verdict-copy">
+          <p class="eyebrow">Who you truly are</p>
+          <h1 id="verdict-title"></h1>
+        </div>
+      </div>
+
+      <div class="prose" id="verdict-body"></div>
+      <div id="verdict-folly"></div>
+      <div id="verdict-shadow"></div>
+
+      <div class="tally" id="tally"></div>
+      <button class="btn" id="again">Take it again</button>
+    </section>
+
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   CONFIG - everything you edit lives in this block.
+   ===================================================================== */
+
+const QUIZ_TITLE = "Ash Queen Personality Test";
+const QUIZ_INTRO = "Find out what kind of poor soul you truly are";
+
+const CREST = "crest.png";                 // the selector image, and the default result image
+const STANDING_QUESTION = "Who are you?";  // sits above the questions. "" removes it.
+const SHOW_TALLY = true;                   // score bars on the result screen
+
+/* ---------------------------------------------------------------------
+   AUDIO
+   Put the files next to index.html and name them here. Both optional -
+   a missing file just means silence, never an error.
+
+     SOUND_HOVER  plays when the selector lands on an option, and
+                  nowhere else. Buttons stay silent.
+     MUSIC_TRACK  loops in the background once the quiz starts.
+   --------------------------------------------------------------------- */
+const SOUND_HOVER = "Menu Hover.mp3";
+const MUSIC_TRACK = "Music.mp3";
+
+/* what the settings start at before anyone touches them */
+const DEFAULT_SETTINGS = { background: true, music: 40, sound: 70 };
+
+/* ---------------------------------------------------------------------
+   THE CHALLENGE
+   Asked only when every answer sat on the middle of the scale.
+   Answering "No" to either sends them back to the first statement.
+   --------------------------------------------------------------------- */
+const CHALLENGE = [
+  "Are you satisfied with your selection?",
+  "Were you honest with your answers?"
+];
+
+/* ---------------------------------------------------------------------
+   SCALES - any scale, any number of steps. Five is just the default.
+   --------------------------------------------------------------------- */
+const SCALES = {
+  agreement: ["Strongly disagree", "Disagree", "Neutral", "Agree", "Strongly agree"],
+  frequency: ["Never", "Rarely", "Sometimes", "Often", "Always"],
+  likeness:  ["Not at all me", "A little", "Halfway", "Mostly me", "Exactly me"]
+};
+
+const DEFAULT_SCALE = "agreement";
+
+/* ---------------------------------------------------------------------
+   RESULTS
+   Each key is an id a question points at. Ties break by the order here.
+
+     label   the name shown
+     image   picture for the result screen (optional - falls back to CREST)
+     accent  hex colour taken from that picture (optional). On the result
+             screen everything that was gold becomes this colour: borders,
+             headings, the folly, the winning bar. Body text stays put.
+     body    the description, one entry per paragraph
+     lead    the line that introduces the folly      (optional)
+     folly   the folly itself, set apart on the page (optional)
+     shadow  { title, text: [...] }                  (optional)
+   --------------------------------------------------------------------- */
+const TRAITS = {
+
+  sonic: {
+    label: "Sonic, The Messenger",
+    image: "The_messanger.png",
+    accent: "#005bab",
+    body: [
+      "The Messenger is the art of movement: carrying words across impossible distances, bringing warnings before it is too late, and ensuring that no voice is silenced by the powers that rule the land. The Queen's realm stretches far beyond her own walls, with lesser cities and distant settlements governed by lords who serve as little more than her obedient husks. The Messenger is the one who travels between them, carrying the Queen's will into places where her presence cannot reach.",
+
+      "It makes you the kind of person who is always moving, always searching for the next road, the next person, and the next place where your presence is needed. You carry messages others cannot, cross paths others fear, and venture into the outskirts where the Miasma makes travel dangerous and isolation deadly. When the Queen demands that her word reach even the smallest settlement beneath her rule, you are the person expected to deliver it."
+    ],
+    lead: "But a fool providing the messenger’s errand always has a folly:",
+    folly: "If you’re always looking forward, how do you know where you’re going—and what you leave behind?",
+    shadow: {
+      title: "The Shadow of your soul",
+      text: [
+        "The greatest danger of a Messenger is forgetting where they are going, what they have promised, and who they are moving for.",
+
+        "An unhealthy Messenger may become directionless, always chasing the next road, the next task, or the next destination without ever stopping to consider whether they are moving toward anything worth reaching. You may keep moving because choosing a path means accepting responsibility for where it leads. The more roads you take without purpose, the easier it becomes to forget why you ever began walking.",
+
+        "Forgetfulness can become just as dangerous. You may forget promises you swore you would keep, lose track of things people trusted you to remember, or fail to notice how often you have disappointed those closest to you. What feels like a small mistake to you may become a pattern to everyone else. Eventually, people may stop trusting you with anything important—not because you meant to betray them, but because they learned you simply would not remember.",
+
+        "Worst of all is selfishness. You may begin to value your own freedom, safety, and desires above the people who depend upon you. A promise becomes something inconvenient, another's suffering is something easily left behind, and your journey is more important than those waiting at its end. Eventually, the road matters more to you than the people you leave behind.",
+
+        "The most dangerous Messenger isn't the one who loses their way. It is the one who forgets who was waiting for them."
+      ]
+    }
+  },
+
+  /* --- the four below are named but not yet written --- */
+
+  tails:    { label: "Tails, The Blacksmith/Merchant", body: ["Description not yet written."] },
+  knuckles: { label: "Knuckles, The Wright",           body: ["Description not yet written."] },
+  eggman:   { label: "Eggman, The Alchemist",          body: ["Description not yet written."] },
+  silver:   { label: "Silver, The Jester",             body: ["Description not yet written."] }
+};
+
+/* ---------------------------------------------------------------------
+   QUESTIONS - one line each. Placeholders until you write the real ones.
+   --------------------------------------------------------------------- */
+const QUESTIONS = [
+  { q: "I would rather see where a road goes than be told where it ends.", trait: "sonic"    },
+  { q: "I would rather make a thing with my hands than argue about it.",   trait: "tails"    },
+  { q: "People come to me when something needs holding together.",         trait: "knuckles" },
+  { q: "I take a thing apart to find out what it really is.",              trait: "eggman"   },
+  { q: "I say the thing nobody else in the room is willing to say.",       trait: "silver"   }
+];
+
+
+/* =====================================================================
+   ENGINE - you should not need to touch anything below here.
+   ===================================================================== */
+
+const $ = id => document.getElementById(id);
+
+const screens = {
+  start:  $("s-start"),
+  quiz:   $("s-quiz"),
+  check:  $("s-check"),
+  result: $("s-result")
+};
+
+const stepsEl = $("steps");
+const selector = $("selector");
+const art = $("selector-art");
+const standing = $("standing");
+
+const WIND = parseInt(getComputedStyle(document.documentElement)
+              .getPropertyValue("--wind")) || 100;
+
+let index = 0;      // current question
+let picks = [];     // picks[i] = chosen step, or undefined
+let hover = 0;      // where the selector is sitting
+let steps = [];     // step elements for this question
+let busy = false;
+
+function show(name){
+  for (const k in screens) screens[k].classList.toggle("on", k === name);
+  window.scrollTo({ top: 0, behavior: "auto" });
+}
+
+function scaleOf(q){ return SCALES[q.scale || DEFAULT_SCALE]; }
+function middleOf(q){ return Math.floor(scaleOf(q).length / 2); }
+
+/* ---------------- the accent swap ---------------- */
+
+function hexParts(hex){
+  const h = hex.replace("#", "");
+  const n = h.length === 3 ? h.split("").map(c => c + c).join("") : h;
+  return [0, 2, 4].map(i => parseInt(n.slice(i, i + 2), 16));
+}
+
+/* everything that was gold takes the result's colour instead */
+function useAccent(hex){
+  const root = document.documentElement;
+  if (!hex){
+    root.style.removeProperty("--gold");
+    root.style.removeProperty("--gold-dim");
+    root.style.removeProperty("--gold-faint");
+    return;
+  }
+  const [r, g, b] = hexParts(hex);
+  root.style.setProperty("--gold", hex);
+  root.style.setProperty("--gold-dim",
+    "rgb(" + Math.round(r * .72) + "," + Math.round(g * .72) + "," + Math.round(b * .72) + ")");
+  root.style.setProperty("--gold-faint", "rgba(" + r + "," + g + "," + b + ",.34)");
+}
+
+/* ---------------- settings ---------------- */
+
+const STORE_KEY = "ash-queen-settings";
+let settings = Object.assign({}, DEFAULT_SETTINGS);
+
+function loadSettings(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(STORE_KEY) || "{}");
+    settings = Object.assign({}, DEFAULT_SETTINGS, saved);
+  }catch(e){ /* private window, blocked storage - defaults are fine */ }
+}
+
+function saveSettings(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(settings)); }catch(e){}
+}
+
+function applySettings(){
+  document.body.classList.toggle("bg-off", !settings.background);
+
+  const bgBtn = $("set-background");
+  bgBtn.setAttribute("aria-pressed", String(settings.background));
+  bgBtn.textContent = settings.background ? "Enabled" : "Disabled";
+
+  $("set-music").value = settings.music;
+  $("music-value").textContent = settings.music;
+  $("set-sound").value = settings.sound;
+  $("sound-value").textContent = settings.sound;
+
+  applyMusic();
+}
+
+/* ---------------- audio ---------------- */
+
+let hoverSound = null;
+let music = null;
+let lastHoverAt = 0;
+let musicWanted = false;
+
+function initAudio(){
+  hoverSound = new Audio(SOUND_HOVER);
+  hoverSound.preload = "auto";
+
+  music = new Audio(MUSIC_TRACK);
+  music.loop = true;
+  music.preload = "auto";
+}
+
+/* plays when the selector lands on an option, nowhere else */
+function playHover(){
+  if (!hoverSound || settings.sound <= 0) return;
+
+  const now = performance.now();
+  if (now - lastHoverAt < 45) return;
+  lastHoverAt = now;
+
+  try{
+    const shot = hoverSound.cloneNode();
+    shot.volume = settings.sound / 100;
+    shot.play().catch(() => {});
+  }catch(e){}
+}
+
+function applyMusic(){
+  if (!music) return;
+  music.volume = settings.music / 100;
+  if (settings.music > 0 && musicWanted) music.play().catch(() => {});
+  else music.pause();
+}
+
+/* ---------------- rendering ---------------- */
+
+function start(){
+  index = 0;
+  picks = [];
+  useAccent(null);                    // back to gold for the questions
+  standing.hidden = !STANDING_QUESTION;
+  show("quiz");
+  render();
+}
+
+function render(){
+  const item = QUESTIONS[index];
+  const labels = scaleOf(item);
+
+  $("statement").textContent = item.q;
+  $("count").textContent = (index + 1) + " of " + QUESTIONS.length;
+  $("back").style.visibility = index === 0 ? "hidden" : "visible";
+
+  const pips = $("pips");
+  pips.textContent = "";
+  QUESTIONS.forEach((_, i) => {
+    const p = document.createElement("span");
+    p.className = "pip" + (i < index ? " done" : i === index ? " here" : "");
+    pips.appendChild(p);
+  });
+
+  stepsEl.textContent = "";
+  steps = labels.map((label, i) => {
+    const b = document.createElement("button");
+    b.className = "step";
+    b.type = "button";
+
+    const node = document.createElement("span");
+    node.className = "node";
+
+    const text = document.createElement("span");
+    text.className = "step-label";
+    text.textContent = label;
+
+    b.append(node, text);
+    b.addEventListener("mouseenter", () => moveTo(i));
+    b.addEventListener("click", () => choose(i));
+    stepsEl.appendChild(b);
+    return b;
+  });
+
+  hover = picks[index] !== undefined ? picks[index] : middleOf(item);
+  paint();
+  place();
+}
+
+function paint(){
+  steps.forEach((el, i) => {
+    el.classList.toggle("on", i === hover);
+    el.classList.toggle("picked", picks[index] === i);
+  });
+}
+
+/* ---------------- the selector ---------------- */
+
+/* drop it on the current step with no travel whatsoever */
+function place(){
+  const el = steps[hover];
+  if (!el) return;
+
+  const stacked = window.matchMedia("(max-width:560px)").matches;
+  const x = stacked ? 2 : el.offsetLeft + el.offsetWidth / 2 - selector.offsetWidth / 2;
+  const y = stacked ? el.offsetTop + el.offsetHeight / 2 - selector.offsetHeight / 2 : 12;
+
+  selector.style.transform = "translate(" + Math.round(x) + "px," + Math.round(y) + "px)";
+}
+
+/* Wind up in place, then cut to the target.
+   A move already in flight is NOT restarted - it just gets a new
+   destination, so waving the mouse keeps landing instead of stalling. */
+let winding = null;
+let target = null;
+let afterLanding = null;
+
+function moveTo(i, after){
+  if (i < 0 || i >= steps.length) return;
+  if (i === hover && !after) return;
+
+  target = i;
+  if (after) afterLanding = after;
+
+  if (winding) return;              // in flight: it will use the latest target
+
+  art.classList.remove("land");
+  art.classList.add("wind");
+  winding = setTimeout(land, WIND);
+}
+
+function land(){
+  winding = null;
+
+  const to = target, then = afterLanding;
+  target = null;
+  afterLanding = null;
+
+  art.classList.remove("wind");
+
+  if (to !== null && to !== hover){
+    hover = to;
+    paint();
+    place();                        // instant: the transform has no transition
+    playHover();
+  }
+
+  void art.offsetWidth;             // restart the landing beat
+  art.classList.add("land");
+
+  if (then) then();
+}
+
+/* ---------------- flow ---------------- */
+
+function choose(i){
+  if (busy) return;
+  busy = true;
+
+  const commit = () => {
+    picks[index] = i;
+    paint();
+    setTimeout(() => {
+      busy = false;
+      if (index < QUESTIONS.length - 1){ index++; render(); }
+      else afterLast();
+    }, 150);
+  };
+
+  if (i === hover && !winding) commit();
+  else moveTo(i, commit);
+}
+
+function back(){
+  if (index > 0){ index--; render(); }
+}
+
+function allNeutral(){
+  return QUESTIONS.every((item, i) => picks[i] === middleOf(item));
+}
+
+function afterLast(){
+  if (allNeutral()) askChallenge(0);
+  else finish();
+}
+
+/* ---------------- the challenge ---------------- */
+
+let challengeAt = 0;
+
+function askChallenge(i){
+  challengeAt = i;
+  $("challenge-q").textContent = CHALLENGE[i];
+  show("check");
+}
+
+function answerChallenge(yes){
+  if (!yes){ start(); return; }
+  if (challengeAt < CHALLENGE.length - 1) askChallenge(challengeAt + 1);
+  else finish();
+}
+
+/* ---------------- scoring ---------------- */
+
+function tally(){
+  const sum = {}, seen = {};
+  for (const id in TRAITS){ sum[id] = 0; seen[id] = 0; }
+
+  QUESTIONS.forEach((item, i) => {
+    const pick = picks[i];
+    if (pick === undefined || !(item.trait in sum)) return;
+
+    const n = scaleOf(item).length;
+    const value = item.reverse ? n - pick : pick + 1;
+
+    sum[item.trait] += value / n;
+    seen[item.trait] += 1;
+  });
+
+  const out = {};
+  for (const id in TRAITS) out[id] = seen[id] ? sum[id] / seen[id] : 0;
+  return out;
+}
+
+function paragraphsInto(box, list){
+  box.textContent = "";
+  (list || []).forEach(text => {
+    const p = document.createElement("p");
+    p.textContent = text;
+    box.appendChild(p);
+  });
+}
+
+function finish(){
+  const score = tally();
+  const ids = Object.keys(TRAITS);
+  const winner = ids.reduce((best, id) => score[id] > score[best] ? id : best, ids[0]);
+  const result = TRAITS[winner];
+
+  useAccent(result.accent || null);
+
+  const pic = $("verdict-art");
+  pic.onerror = () => { pic.onerror = null; pic.src = CREST; };
+  pic.src = result.image || CREST;
+
+  $("verdict-title").textContent = result.label;
+  paragraphsInto($("verdict-body"), result.body);
+
+  const follyBox = $("verdict-folly");
+  follyBox.textContent = "";
+  if (result.folly){
+    const wrap = document.createElement("div");
+    wrap.className = "folly";
+    if (result.lead){
+      const lead = document.createElement("p");
+      lead.className = "folly-lead";
+      lead.textContent = result.lead;
+      wrap.appendChild(lead);
+    }
+    const q = document.createElement("p");
+    q.className = "folly-q";
+    q.textContent = result.folly;
+    wrap.appendChild(q);
+    follyBox.appendChild(wrap);
+  }
+
+  const shadowBox = $("verdict-shadow");
+  shadowBox.textContent = "";
+  if (result.shadow){
+    const wrap = document.createElement("div");
+    wrap.className = "shadow prose";
+    const h = document.createElement("h2");
+    h.textContent = result.shadow.title;
+    wrap.appendChild(h);
+    const body = document.createElement("div");
+    paragraphsInto(body, result.shadow.text);
+    while (body.firstChild) wrap.appendChild(body.firstChild);
+    shadowBox.appendChild(wrap);
+  }
+
+  const box = $("tally");
+  box.textContent = "";
+  box.hidden = !SHOW_TALLY;
+
+  if (SHOW_TALLY){
+    ids.slice().sort((a, b) => score[b] - score[a]).forEach(id => {
+      const row = document.createElement("div");
+      row.className = "tally-row" + (id === winner ? " win" : "");
+
+      const name = document.createElement("span");
+      name.className = "tally-name";
+      name.textContent = TRAITS[id].label;
+
+      const track = document.createElement("span");
+      track.className = "tally-track";
+      const fill = document.createElement("span");
+      fill.className = "tally-fill";
+      fill.style.width = Math.round(score[id] * 100) + "%";
+      track.appendChild(fill);
+
+      const pct = document.createElement("span");
+      pct.className = "tally-pct";
+      pct.textContent = Math.round(score[id] * 100) + "%";
+
+      row.append(name, track, pct);
+      box.appendChild(row);
+    });
+  }
+
+  standing.hidden = true;
+  show("result");
+}
+
+/* ---------------- input ---------------- */
+
+document.addEventListener("keydown", e => {
+  if (screens.check.classList.contains("on")){
+    if (e.key === "Enter") { e.preventDefault(); answerChallenge(true); }
+    if (e.key === "Escape"){ e.preventDefault(); answerChallenge(false); }
+    return;
+  }
+
+  if (!screens.quiz.classList.contains("on")) return;
+
+  switch (e.key){
+    case "ArrowLeft":
+    case "ArrowUp":   e.preventDefault(); moveTo(hover - 1); break;
+    case "ArrowRight":
+    case "ArrowDown": e.preventDefault(); moveTo(hover + 1); break;
+    case "Enter":
+    case " ":         e.preventDefault(); choose(hover); break;
+    case "Backspace": e.preventDefault(); back(); break;
+    default:
+      if (e.key >= "1" && e.key <= "9"){
+        const i = Number(e.key) - 1;
+        if (i < steps.length) choose(i);
+      }
+  }
+});
+
+window.addEventListener("resize", place);
+
+/* ---------------- boot ---------------- */
+
+const cursorImg = $("crest-cursor");
+cursorImg.addEventListener("error", () => {
+  cursorImg.hidden = true;
+  $("crest-fallback").hidden = false;
+});
+
+[cursorImg, $("crest-start")].forEach(img => { img.src = CREST; });
+
+$("title").textContent = QUIZ_TITLE;
+$("intro").textContent = QUIZ_INTRO;
+standing.textContent = STANDING_QUESTION;
+
+loadSettings();
+initAudio();
+applySettings();
+
+/* settings panel */
+const cog = $("cog");
+const panel = $("settings");
+
+cog.addEventListener("click", e => {
+  e.stopPropagation();
+  const open = panel.classList.toggle("open");
+  cog.setAttribute("aria-expanded", String(open));
+});
+
+panel.addEventListener("click", e => e.stopPropagation());
+
+document.addEventListener("click", () => {
+  panel.classList.remove("open");
+  cog.setAttribute("aria-expanded", "false");
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape" && panel.classList.contains("open")){
+    panel.classList.remove("open");
+    cog.setAttribute("aria-expanded", "false");
+  }
+});
+
+$("set-background").addEventListener("click", () => {
+  settings.background = !settings.background;
+  saveSettings();
+  applySettings();
+});
+
+$("set-music").addEventListener("input", e => {
+  settings.music = Number(e.target.value);
+  $("music-value").textContent = settings.music;
+  saveSettings();
+  applyMusic();
+});
+
+$("set-sound").addEventListener("input", e => {
+  settings.sound = Number(e.target.value);
+  $("sound-value").textContent = settings.sound;
+  saveSettings();
+});
+
+/* buttons */
+$("begin").addEventListener("click", () => {
+  musicWanted = true;        // a real gesture: browsers will allow audio now
+  applyMusic();
+  start();
+});
+$("back").addEventListener("click", back);
+$("say-yes").addEventListener("click", () => answerChallenge(true));
+$("say-no").addEventListener("click", () => answerChallenge(false));
+$("again").addEventListener("click", start);
+</script>
+</body>
+</html>
