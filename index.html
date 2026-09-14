@@ -129,11 +129,19 @@
   .screen{display:none}
   .screen.on{display:block}
 
-  /* a question can call for silence - the frame goes stark for it */
-  .plate.hushed{
-    border-color:#ffffff;
+  /* A question can take the plate over: --mood is set from its own entry
+     and everything that was gold follows it, frame and statement included. */
+  .plate.moody{
+    border-color:var(--mood);
     transition:border-color .45s ease;
+
+    --gold:var(--mood);
+    --gold-dim:color-mix(in srgb, var(--mood) 52%, #000);
+    --gold-faint:color-mix(in srgb, var(--mood) 26%, transparent);
+    --text:var(--mood);
   }
+  /* and it can send the insignia away entirely */
+  .plate.bare .selector{display:none}
 
   h1,h2{
     font-family:var(--display);
@@ -1123,7 +1131,9 @@ const WIGHT = {
      reverse optional - flips the whole statement
      pin     optional - hold this one at that position (1-based) while
              everything else is shuffled around it
-     hush    optional - the plate's frame turns white for this one
+     mood    optional - a colour this question paints the whole plate in
+     bare    optional - hide the insignia for this one
+     mute    optional - the selector makes no sound on this one
      silent  optional - the music stops while this one is on screen
 
    Add or remove freely. Everything downstream follows the list.
@@ -1196,9 +1206,11 @@ const QUESTIONS = [
   { q: "I say nothing when I disagree, and tell myself it was not my place.",
     scores: { knuckles: 2, silver: -1 }, scale: "frequency" },
 
-  /* held at 23 */
+  /* held at 23: the plate turns red, the insignia leaves, and the
+     selector makes no sound */
   { q: "Are you fundamentally a bad person who pretends to be good?",
-    scores: { eggman: 1, silver: 1 }, pin: 23 },
+    scores: { eggman: 1, silver: 1 },
+    pin: 23, mood: "#cd0e0d", bare: true, mute: true },
 
   { q: "I want to know how a thing works even when I have been warned away from it.",
     scores: { eggman: 2 } },
@@ -1221,9 +1233,10 @@ const QUESTIONS = [
   { q: "A room does not feel right to me until I have made someone laugh.",
     scores: { silver: 2 } },
 
-  /* held at 31: the frame goes stark and the music stops dead for it */
+  /* held at 31: the whole plate goes white and the music stops dead */
   { q: "Can a person truly change who they are, fundamentally?",
-    scores: { tails: -2, knuckles: -1 }, pin: 31, hush: true, silent: true },
+    scores: { tails: -2, knuckles: -1 },
+    pin: 31, mood: "#ffffff", silent: true },
 
   { q: "I am the reason someone stopped trying.",
     scores: { eggman: 2, knuckles: 1 } },
@@ -1320,7 +1333,11 @@ let busy = false;
 
 function show(name){
   for (const k in screens) screens[k].classList.toggle("on", k === name);
-  if (name !== "quiz" && plateEl) plateEl.classList.remove("hushed");
+  if (name !== "quiz" && plateEl){
+    plateEl.classList.remove("moody", "bare");
+    plateEl.style.removeProperty("--mood");
+    muteHover = false;
+  }
   window.scrollTo({ top: 0, behavior: "auto" });
 }
 
@@ -1485,6 +1502,7 @@ let music = null;
 let lastHoverAt = 0;
 let musicWanted = true;           /* wanted from the moment the page opens */
 let unlocked = false;
+let muteHover = false;      /* set per question by render() */
 let currentTrack = MUSIC_TRACK;   /* a result may swap this out */
 
 const MUSIC_KEY = "ash-queen-music";
@@ -1553,6 +1571,7 @@ function unlockAudio(){
 
 /* plays when the selector lands on an option, nowhere else */
 function playHover(){
+  if (muteHover) return;                 /* this question wants no sound */
   if (settings.sound <= 0 || !hoverPool.length) return;
 
   const now = performance.now();
@@ -1611,9 +1630,17 @@ function render(){
   $("statement").textContent = item.q;
   $("count").textContent = (index + 1) + " of " + order.length;
 
-  /* the white frame and the silence are separate marks - a question can
-     carry either, both, or neither, and any other question hands them back */
-  if (plateEl) plateEl.classList.toggle("hushed", !!item.hush);
+  /* every mark is separate - a question may carry any of them, and any
+     question without them hands the plate back as it was */
+  if (plateEl){
+    plateEl.classList.toggle("moody", !!item.mood);
+    plateEl.classList.toggle("bare", !!item.bare);
+    if (item.mood) plateEl.style.setProperty("--mood", item.mood);
+    else plateEl.style.removeProperty("--mood");
+  }
+
+  muteHover = !!item.mute;
+
   if (item.silent){ if (music) music.pause(); }
   else applyMusic();
   $("back").style.visibility = index === 0 ? "hidden" : "visible";
@@ -1962,7 +1989,7 @@ function finish(special){
     });
   }
 
-  applyMusic();                 /* in case a hushed question left it paused */
+  applyMusic();                 /* in case a silent question left it paused */
   standing.hidden = true;
   saveRun(special === WIGHT);
   show("result");
