@@ -465,16 +465,25 @@
   .tally{margin:34px 0 28px}
   .tally-row{
     display:grid;
-    grid-template-columns:minmax(120px,1.4fr) 1.8fr auto;
+    grid-template-columns:26px minmax(104px,1.5fr) 1fr auto;
     align-items:center;
-    gap:13px;
-    padding:7px 0;
+    gap:11px;
+    padding:6px 0;
     font-size:13px;
     color:var(--muted);
     border-bottom:1px solid var(--gold-faint);
   }
+  .tally-icon{
+    width:26px;height:26px;
+    display:grid;place-items:center;
+  }
+  .tally-icon img{
+    max-width:100%;max-height:100%;
+    object-fit:contain;
+    display:block;
+  }
   .tally-name{font-family:Cinzel,Georgia,serif;letter-spacing:.03em;font-size:12.5px}
-  .tally-track{height:4px;background:var(--gold-faint)}
+  .tally-track{height:3px;background:var(--gold-faint)}
   .tally-fill{height:100%;background:var(--gold-dim);width:0}
   .tally-pct{font-variant-numeric:tabular-nums;font-size:12px}
   .tally-row.win{color:var(--gold)}
@@ -501,7 +510,8 @@
     .step.on{border-color:var(--gold-dim)}
     .step-label{font-size:14px;text-align:left}
     .selector{width:40px;height:50px}
-    .tally-row{grid-template-columns:1fr auto;gap:8px}
+    .tally-row{grid-template-columns:24px 1fr auto;gap:9px}
+    .tally-icon{width:24px;height:24px}
     .tally-track{display:none}
     .settings{width:calc(100% - 24px)}
   }
@@ -638,7 +648,7 @@ const SHOW_TALLY = true;                   // score bars on the result screen
 /* Bump this whenever you REPLACE a picture or sound while keeping its
    filename. Browsers cache assets hard, and without a new stamp they
    will happily keep serving you the old file. */
-const ASSET_VERSION = "6";
+const ASSET_VERSION = "7";
 
 /* ---------------------------------------------------------------------
    AUDIO
@@ -731,7 +741,7 @@ const TRAITS = {
   knuckles: {
     label: "Knuckles, The Wright",
     image: "the_wright.png",
-    accent: "#ffffff",
+    accent: "#cd0e0d",
     body: ["Description not yet written."]
   },
 
@@ -748,6 +758,18 @@ const TRAITS = {
     accent: "#acc4c2",
     body: ["Description not yet written."]
   }
+};
+
+/* ---------------------------------------------------------------------
+   THE WIGHT
+   Not scored like the others - it is what you are left with when the
+   scale never moved. Given only after the challenge below is confirmed.
+   Add an `image` here whenever you have one.
+   --------------------------------------------------------------------- */
+const WIGHT = {
+  label: "The Woe-Begotten Wight",
+  accent: "#ffffff",
+  body: ["Description not yet written."]
 };
 
 /* ---------------------------------------------------------------------
@@ -797,9 +819,12 @@ function show(name){
 function scaleOf(q){ return SCALES[q.scale || DEFAULT_SCALE]; }
 function middleOf(q){ return Math.floor(scaleOf(q).length / 2); }
 
-/* every picture and sound goes through here, so a version bump
-   forces the browser to fetch the new file instead of its cached one */
-function asset(path){ return path + "?v=" + ASSET_VERSION; }
+/* Every picture and sound goes through here, so a version bump forces the
+   browser to fetch the new file instead of its cached one. Opened straight
+   off disk there is no cache to bust, and a "?v=" can stop the file being
+   found at all - so the stamp is only added when served over http(s). */
+const SERVED = location.protocol === "http:" || location.protocol === "https:";
+function asset(path){ return SERVED ? path + "?v=" + ASSET_VERSION : path; }
 
 /* ---------------- the accent swap ---------------- */
 
@@ -858,32 +883,55 @@ function applySettings(){
 
 /* ---------------- audio ---------------- */
 
-let hoverSound = null;
+let hoverPool = [];      /* several copies so quick moves can overlap */
+let hoverNext = 0;
 let music = null;
 let lastHoverAt = 0;
 let musicWanted = false;
+let unlocked = false;
 
 function initAudio(){
-  hoverSound = new Audio(asset(SOUND_HOVER));
-  hoverSound.preload = "auto";
+  for (let i = 0; i < 4; i++){
+    const a = new Audio(asset(SOUND_HOVER));
+    a.preload = "auto";
+    hoverPool.push(a);
+  }
 
   music = new Audio(asset(MUSIC_TRACK));
   music.loop = true;
   music.preload = "auto";
 }
 
+/* A browser refuses to play anything until the page has been interacted
+   with. Hovering doesn't count as interaction - so on the first real
+   click we play each clip silently to get permission for later. */
+function unlockAudio(){
+  if (unlocked) return;
+  unlocked = true;
+
+  hoverPool.forEach(a => {
+    a.volume = 0;
+    const p = a.play();
+    if (p && p.then) p.then(() => { a.pause(); a.currentTime = 0; }).catch(() => {});
+  });
+}
+
 /* plays when the selector lands on an option, nowhere else */
 function playHover(){
-  if (!hoverSound || settings.sound <= 0) return;
+  if (settings.sound <= 0 || !hoverPool.length) return;
 
   const now = performance.now();
   if (now - lastHoverAt < 45) return;
   lastHoverAt = now;
 
+  hoverNext = (hoverNext + 1) % hoverPool.length;
+  const a = hoverPool[hoverNext];
+
   try{
-    const shot = hoverSound.cloneNode();
-    shot.volume = settings.sound / 100;
-    shot.play().catch(() => {});
+    a.currentTime = 0;
+    a.volume = settings.sound / 100;
+    const p = a.play();
+    if (p && p.catch) p.catch(() => {});
   }catch(e){}
 }
 
@@ -1054,9 +1102,9 @@ function askChallenge(i){
 }
 
 function answerChallenge(yes){
-  if (!yes){ start(); return; }
+  if (!yes){ start(); return; }                        /* back to the first statement */
   if (challengeAt < CHALLENGE.length - 1) askChallenge(challengeAt + 1);
-  else finish();
+  else finish(WIGHT);                                  /* they stood by an empty answer */
 }
 
 /* ---------------- scoring ---------------- */
@@ -1090,11 +1138,11 @@ function paragraphsInto(box, list){
   });
 }
 
-function finish(){
+function finish(special){
   const score = tally();
   const ids = Object.keys(TRAITS);
   const winner = ids.reduce((best, id) => score[id] > score[best] ? id : best, ids[0]);
-  const result = TRAITS[winner];
+  const result = special || TRAITS[winner];
 
   useAccent(result.accent || null);
 
@@ -1150,9 +1198,21 @@ function finish(){
   box.hidden = !SHOW_TALLY;
 
   if (SHOW_TALLY){
+    const winId = special ? null : winner;   /* the Wight wins nothing on the scale */
+
     ids.slice().sort((a, b) => score[b] - score[a]).forEach(id => {
       const row = document.createElement("div");
-      row.className = "tally-row" + (id === winner ? " win" : "");
+      row.className = "tally-row" + (id === winId ? " win" : "");
+
+      /* the little face beside each name */
+      const icon = document.createElement("span");
+      icon.className = "tally-icon";
+      if (TRAITS[id].image){
+        const im = document.createElement("img");
+        im.src = asset(TRAITS[id].image);
+        im.alt = "";
+        icon.appendChild(im);
+      }
 
       const name = document.createElement("span");
       name.className = "tally-name";
@@ -1169,7 +1229,7 @@ function finish(){
       pct.className = "tally-pct";
       pct.textContent = Math.round(score[id] * 100) + "%";
 
-      row.append(name, track, pct);
+      row.append(icon, name, track, pct);
       box.appendChild(row);
     });
   }
@@ -1238,6 +1298,7 @@ cog.addEventListener("click", e => {
 panel.addEventListener("click", e => e.stopPropagation());
 
 document.addEventListener("click", () => {
+  unlockAudio();                 /* any click counts as the gesture */
   panel.classList.remove("open");
   cog.setAttribute("aria-expanded", "false");
 });
@@ -1270,6 +1331,7 @@ $("set-sound").addEventListener("input", e => {
 
 /* buttons */
 $("begin").addEventListener("click", () => {
+  unlockAudio();
   musicWanted = true;        // a real gesture: browsers will allow audio now
   applyMusic();
   start();
