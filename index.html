@@ -556,6 +556,7 @@
   /* ---------------- the challenge ---------------- */
 
   /* the same purple the aside speaks in - it is the same voice asking */
+  #s-age,
   #s-check{
     --gold:#8d7a9c;
     --gold-dim:#675972;
@@ -915,11 +916,11 @@
     <!-- ===================== AGE ===================== -->
     <section class="screen" id="s-age">
       <div class="challenge">
-        <p class="challenge-q">Before you begin: are you above or below 18?</p>
+        <p class="challenge-q">Ere thou beginnest &mdash; hast thou seyn eighteen winters pass?</p>
       </div>
       <div class="challenge-row">
-        <button class="btn" id="age-over">18 or over</button>
-        <button class="btn-quiet" id="age-under">Under 18</button>
+        <button class="btn" id="age-over">Aye, and more</button>
+        <button class="btn-quiet" id="age-under">Nay, fewer</button>
       </div>
     </section>
 
@@ -1285,25 +1286,25 @@ const WIGHT = {
 const QUESTIONS = [
 
   { q: "Have you ever given in?",
-    scores: { knuckles: 2, sonic: 1 } },
+    scores: { knuckles: 2, tails: 1 } },
 
   { q: "You grow restless when you have stayed in one place too long.",
     scores: { sonic: 2 }, scale: "frequency" },
 
   { q: "Do you consider yourself a happy person?",
-    scores: { knuckles: -2, silver: -1 } },
+    scores: { knuckles: -2 } },
 
   { q: "You would use what someone told you in confidence if the moment called for it.",
-    scores: { eggman: 2, silver: 1 } },
+    scores: { eggman: 2 } },
 
   { q: "Have you ever regretted not insulting someone?",
     scores: { eggman: 2, silver: 1 } },
 
   { q: "You keep moving because choosing a direction would make you answerable for it.",
-    scores: { sonic: 2, knuckles: 1 } },
+    scores: { sonic: 2 } },
 
   { q: "Do you value wealth over relations?",
-    scores: { tails: 2, eggman: 1 } },
+    scores: { eggman: 2, sonic: 1 } },
 
   { q: "You can laugh at others more easily than you can stand being laughed at.",
     scores: { silver: 2 } },
@@ -1345,7 +1346,7 @@ const QUESTIONS = [
     scores: { tails: 2 }, scale: "frequency" },
 
   { q: "Do you think people are naturally rotten to the core?",
-    scores: { eggman: 2, silver: 1 } },
+    scores: { eggman: 2 } },
 
   { q: "You say nothing when you disagree, and tell yourself it was not your place.",
     scores: { knuckles: 2, silver: -1 }, scale: "frequency" },
@@ -1364,13 +1365,13 @@ const QUESTIONS = [
     scores: { tails: 2, sonic: 1 } },
 
   { q: "Do you judge others for the exact same flaws you quietly forgive in yourself?",
-    scores: { eggman: 2, silver: 1 } },
+    scores: { eggman: 2 } },
 
   { q: "You would walk away from people who depend on you if staying cost you too much.",
     scores: { sonic: 2, knuckles: -1 } },
 
   { q: "Someone who loved you has described you accurately in a way you hated.",
-    scores: { silver: 2, eggman: 1 } },
+    scores: { silver: 2 } },
 
   { q: "A room does not feel right to you until you have made someone laugh.",
     scores: { silver: 2 } },
@@ -1388,19 +1389,19 @@ const QUESTIONS = [
     bare: true, mute: true, silent: true, solo: true, once: true },
 
   { q: "You are the reason someone stopped trying.",
-    scores: { eggman: 2, knuckles: 1 } },
+    scores: { eggman: 2, sonic: 1 } },
 
   { q: "You believe your own judgement is sounder than most of the advice you are given.",
-    scores: { eggman: 2, silver: 1 } },
+    scores: { eggman: 2 } },
 
   { q: "If the people in your life compared notes, their versions of you would not match.",
-    scores: { silver: 2, eggman: 1 } },
+    scores: { silver: 2 } },
 
   { q: "When work turns demanding, you find a reason to stop before it is done.",
     scores: { knuckles: 2, tails: 1 }, scale: "frequency" },
 
   { q: "You are jealous of the success of those closest to you.",
-    scores: { silver: 2, eggman: 1 } },
+    scores: { silver: 2 } },
 
   { q: "You would rather mend a thing yourself than hand it to someone who could do it faster.",
     scores: { tails: 2 } },
@@ -1418,7 +1419,7 @@ const QUESTIONS = [
     scores: { silver: 2 }, scale: "frequency" },
 
   { q: "Do you withhold love as a silent punishment?",
-    scores: { eggman: 2, knuckles: 1 } },
+    scores: { eggman: 2 } },
 
   { q: "You would give up something you love to spare someone else from suffering.",
     scores: { knuckles: 2, sonic: -1 } },
@@ -1427,7 +1428,7 @@ const QUESTIONS = [
     scores: { sonic: 1, knuckles: 1, eggman: 1 } },
 
   { q: "Being corrected lands as an insult before it lands as help.",
-    scores: { eggman: 2, silver: 1 } },
+    scores: { eggman: 2 } },
 
   { q: "Someone has cried because of something you did, and you have since told it as a funny story.",
     scores: { silver: 2, eggman: 1 } },
@@ -2323,7 +2324,7 @@ function renderAnswers(){
     list.appendChild(row);
   };
 
-  if (age) line("-", "Are you above or below 18?", age);
+  if (age) line("-", "Hast thou seyn eighteen winters pass?", age);
 
   order.forEach((srcIndex, i) => {
     const item = QUESTIONS[srcIndex];
@@ -2454,8 +2455,8 @@ function answerAge(value){
   start();
 }
 
-$("age-over").addEventListener("click", () => answerAge("18 or over"));
-$("age-under").addEventListener("click", () => answerAge("Under 18"));
+$("age-over").addEventListener("click", () => answerAge("Eighteen winters or more"));
+$("age-under").addEventListener("click", () => answerAge("Fewer than eighteen winters"));
 $("back").addEventListener("click", back);
 $("say-yes").addEventListener("click", () => answerChallenge(true));
 $("say-no").addEventListener("click", () => answerChallenge(false));
