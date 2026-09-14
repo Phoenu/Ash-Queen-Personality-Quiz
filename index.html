@@ -51,9 +51,23 @@
     content:"";
     position:absolute;
     inset:0;
-    background:rgba(0,0,0,.28);
+    background:rgba(0,0,0,.2);
   }
   body.bg-off #quizBackground{display:none}
+
+  /* while a result carries a scene, the plate turns translucent so the art
+     reads through it. The blur keeps the text crisp over moving pictures. */
+  body.has-scene .plate{
+    background:rgba(0,0,0,.78);
+    backdrop-filter:blur(4px);
+    -webkit-backdrop-filter:blur(4px);
+  }
+  /* switching the background off puts the solid plate back */
+  body.bg-off .plate{
+    background:var(--ink);
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+  }
 
   .wrap{
     min-height:100vh;
@@ -1303,6 +1317,8 @@ function useBackground(url){
     bg.style.backgroundImage = "";
     bg.classList.remove("has-art");
   }
+  /* the plate reads the same flag to decide whether to turn translucent */
+  document.body.classList.toggle("has-scene", !!url);
 }
 
 /* ---------------- settings ---------------- */
