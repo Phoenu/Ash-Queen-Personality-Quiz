@@ -190,24 +190,32 @@
   /* Something answers back, once, late on. Purple taken from the crowned
      head - the border keeps the icon's own shade, the text is lifted from
      it so a short line still reads against black. */
+  /* It holds the screen on its own, the way a question does, then gives
+     the screen back. Clicking anywhere moves it along early. */
+  .aside-hold{
+    min-height:clamp(150px,30vh,240px);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+  }
   .interject{
-    margin:0 0 22px;
-    padding:12px 18px;
-    width:max-content;
+    margin:0;
+    padding:clamp(16px,3vw,24px) clamp(20px,4vw,34px);
     max-width:100%;
     border:1px solid #675972;
     background:rgba(69,50,76,.42);
     color:#b9a6c9;
     font-family:var(--display);
-    font-size:clamp(14px,2.5vw,17px);
+    font-size:clamp(17px,3.2vw,24px);
     letter-spacing:.03em;
-    cursor:pointer;
+    text-align:center;
+    text-wrap:balance;
     opacity:0;
-    transform:translateY(6px);
-    transition:opacity .3s ease, transform .3s ease;
+    transform:translateY(8px);
+    transition:opacity .34s ease, transform .34s ease;
   }
   .interject.shown{opacity:1;transform:none}
-  .interject[hidden]{display:none}
 
   h1,h2{
     font-family:var(--display);
@@ -893,7 +901,6 @@
         <div class="steps" id="steps"></div>
       </div>
 
-      <div class="interject" id="interject" hidden></div>
 
       <div class="footer">
         <button class="btn-quiet" id="back">Back</button>
@@ -908,6 +915,13 @@
       <div class="challenge-row">
         <button class="btn" id="age-over">18 or over</button>
         <button class="btn-quiet" id="age-under">Under 18</button>
+      </div>
+    </section>
+
+    <!-- ===================== THE ASIDE ===================== -->
+    <section class="screen" id="s-aside">
+      <div class="aside-hold">
+        <p class="interject" id="interject"></p>
       </div>
     </section>
 
@@ -1437,6 +1451,7 @@ const screens = {
   start:   $("s-start"),
   age:     $("s-age"),
   quiz:    $("s-quiz"),
+  aside:   $("s-aside"),
   check:   $("s-check"),
   result:  $("s-result"),
   vessels: $("s-vessels"),
@@ -1516,11 +1531,16 @@ function pickInterjection(){
   return -1;
 }
 
-/* show the aside, then carry on when it has been read or dismissed */
+/* Take the screen over for a moment - as though the quiz had moved to
+   another question - hold, then hand it back and go on to the real one. */
+let asideClose = null;
+
 function interject(done){
   const box = $("interject");
   box.textContent = INTERJECTIONS[Math.floor(Math.random() * INTERJECTIONS.length)];
-  box.hidden = false;
+  box.classList.remove("shown");
+
+  show("aside");
   void box.offsetWidth;
   box.classList.add("shown");
 
@@ -1528,13 +1548,15 @@ function interject(done){
   const close = () => {
     if (over) return;
     over = true;
+    asideClose = null;
     clearTimeout(timer);
     box.classList.remove("shown");
-    setTimeout(() => { box.hidden = true; done(); }, 280);
+    setTimeout(() => { show("quiz"); done(); }, 340);
   };
 
+  asideClose = close;                      /* so a key press can hurry it */
   const timer = setTimeout(close, 2600);
-  box.addEventListener("click", close, { once: true });
+  screens.aside.addEventListener("click", close, { once: true });
 }
 
 function scaleOf(q){ return SCALES[q.scale || DEFAULT_SCALE]; }
@@ -1805,9 +1827,6 @@ function render(){
   afterLanding = null;
   busy = false;
 
-  const aside = $("interject");
-  aside.hidden = true;
-  aside.classList.remove("shown");
 
   const item = qAt(index);
   const labels = scaleOf(item);
@@ -2310,6 +2329,14 @@ function renderAnswers(){
 /* ---------------- input ---------------- */
 
 document.addEventListener("keydown", e => {
+  if (screens.aside.classList.contains("on")){
+    if (e.key === "Enter" || e.key === " " || e.key === "Escape"){
+      e.preventDefault();
+      if (asideClose) asideClose();
+    }
+    return;
+  }
+
   if (screens.check.classList.contains("on")){
     if (e.key === "Enter") { e.preventDefault(); answerChallenge(true); }
     if (e.key === "Escape"){ e.preventDefault(); answerChallenge(false); }
