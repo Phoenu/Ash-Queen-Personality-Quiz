@@ -150,9 +150,15 @@
   }
   .omen[hidden]{display:none}
 
+  /* it comes up into the light, and afterwards goes back out of it */
   @keyframes omen-wake{
     from{opacity:0;transform:translateX(-50%) translateY(10px)}
     to  {opacity:1;transform:translateX(-50%)}
+  }
+  .omen.fading{animation:omen-sleep 1.1s ease-in both}
+  @keyframes omen-sleep{
+    from{opacity:1;transform:translateX(-50%)}
+    to  {opacity:0;transform:translateX(-50%) translateY(-6px)}
   }
   @media (prefers-reduced-motion:reduce){
     .omen{animation:none}
@@ -190,8 +196,8 @@
     width:max-content;
     max-width:100%;
     border:1px solid #675972;
-    background:rgba(69,50,76,.32);
-    color:#a596b2;
+    background:rgba(69,50,76,.42);
+    color:#b9a6c9;
     font-family:var(--display);
     font-size:clamp(14px,2.5vw,17px);
     letter-spacing:.03em;
@@ -536,21 +542,32 @@
 
   /* ---------------- the challenge ---------------- */
 
+  /* the same purple the aside speaks in - it is the same voice asking */
+  #s-check{
+    --gold:#8d7a9c;
+    --gold-dim:#675972;
+    --gold-faint:rgba(103,89,114,.38);
+  }
+
   .challenge{
     min-height:clamp(140px,26vh,200px);
     display:flex;
     align-items:center;
   }
   .challenge-q{
+    width:100%;
     font-family:var(--display);
-    font-size:clamp(20px,3.8vw,28px);
+    font-size:clamp(18px,3.2vw,25px);
     font-weight:500;
-    line-height:1.4;
-    color:var(--text);
+    line-height:1.5;
+    color:#b9a6c9;
     text-wrap:balance;
     margin:0;
+    padding:clamp(18px,3vw,26px);
+    border:1px solid #675972;
+    background:rgba(69,50,76,.32);
   }
-  .challenge-row{display:flex;gap:12px;margin-top:8px}
+  .challenge-row{display:flex;gap:12px;margin-top:20px}
 
   /* ---------------- result ---------------- */
 
@@ -1013,8 +1030,10 @@ const DEFAULT_SETTINGS = { background: true, music: 40, sound: 70 };
      onNo: "wight"   they become the Woe-Begotten Wight
    --------------------------------------------------------------------- */
 const CHALLENGE = [
-  { q: "Are you satisfied with your selection?", onNo: "retake" },
-  { q: "Were you honest with your answers?",     onNo: "wight"  }
+  { q: "Hast thou gazed into thine owne heart and seyn the foulest parte of thee?",
+    onNo: "retake" },
+  { q: "Hast thou speakth honestly or will do so?",
+    onNo: "wight" }
 ];
 
 /* ---------------------------------------------------------------------
@@ -1813,14 +1832,24 @@ function render(){
   /* a question's own scene always shows, settings or not */
   useBackground(item.background || null, true);
 
-  /* and anything it hangs above the plate */
+  /* and anything it hangs above the plate. When the question that called
+     for it is behind us it withdraws slowly rather than blinking out. */
   const omen = $("omen");
   if (item.omen){
+    omen.classList.remove("fading");
     omen.hidden = false;
     omen.src = asset(item.omen);
-  }else{
-    omen.hidden = true;
-    omen.removeAttribute("src");
+  }else if (!omen.hidden){
+    omen.classList.remove("fading");
+    void omen.offsetWidth;
+    omen.classList.add("fading");
+    setTimeout(() => {
+      /* unless something has asked for it again in the meantime */
+      if (!omen.classList.contains("fading")) return;
+      omen.classList.remove("fading");
+      omen.hidden = true;
+      omen.removeAttribute("src");
+    }, 1100);
   }
 
   if (plateEl){
