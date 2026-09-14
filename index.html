@@ -514,8 +514,8 @@
   .tally-track{height:3px;background:var(--gold-faint)}
   .tally-fill{display:block;height:100%;width:0;background:var(--gold-dim)}
   .tally-pct{font-variant-numeric:tabular-nums;font-size:12px}
-  .tally-row.win{color:var(--gold)}
-  .tally-row.win .tally-fill{background:var(--gold)}
+  .tally-row.top{color:var(--text)}
+  .tally-row.top .tally-name{font-weight:700}
 
   /* ---------------- other vessels ---------------- */
 
@@ -784,7 +784,7 @@
       <div id="verdict-shadow"></div>
 
       <section class="others" id="others">
-        <h3>Other potential Vessels</h3>
+        <h3>Your Potential Vessels</h3>
         <p class="gap-note" id="gap-note"></p>
         <div class="tally" id="tally"></div>
       </section>
@@ -831,7 +831,7 @@ const QUIZ_INTRO = "Find out what kind of poor soul you truly are";
 const CREST = "crest.png";                 // the selector image
 const STANDING_QUESTION = "Who are you?";  // sits above the questions. "" removes it.
 const SHOW_TALLY = true;                   // score bars on the result screen
-const TALLY_TOP = 3;                       // how many of them to list
+const TALLY_TOP = 5;                       // how many vessels to list
 
 /* Bump this whenever you REPLACE a picture or sound while keeping its
    filename. Browsers cache assets hard, and without a new stamp they
@@ -1713,10 +1713,10 @@ function finish(special){
       ? gapNote(ranked[0], runnerUp, (score[ranked[0]] - score[runnerUp]) * 100)
       : "";
 
-    /* the winner is named above - these are the ones it nearly was */
-    ranked.slice(1, 1 + TALLY_TOP).forEach(id => {
+    /* every vessel you could have been, the strongest first */
+    ranked.slice(0, TALLY_TOP).forEach(id => {
       const row = document.createElement("div");
-      row.className = "tally-row";
+      row.className = "tally-row" + (id === ranked[0] ? " top" : "");
 
       /* the little face beside each name */
       const icon = document.createElement("span");
@@ -1742,6 +1742,13 @@ function finish(special){
       const pct = document.createElement("span");
       pct.className = "tally-pct";
       pct.textContent = Math.round(score[id] * 100) + "%";
+
+      /* each vessel wears its own colour, not the winner's */
+      const tint = TRAITS[id].accent;
+      if (tint){
+        name.style.color = tint;
+        fill.style.background = tint;
+      }
 
       row.append(icon, name, track, pct);
       box.appendChild(row);
