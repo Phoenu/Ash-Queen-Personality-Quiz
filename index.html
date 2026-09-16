@@ -3220,8 +3220,14 @@ function render(){
 
   muteHover = !!item.mute;
 
-  if (item.silent){ if (music) music.pause(); }
-  else applyMusic();
+  if (item.silent){
+    musicWanted = false;
+    if (seamOn) seamStop();
+    if (music) music.pause();
+  }else{
+    musicWanted = true;
+    applyMusic();
+  }
   $("back").style.visibility = index === 0 ? "hidden" : "visible";
   $("forward").style.visibility =
     (picks[index] !== undefined && nextSlot() < order.length) ? "visible" : "hidden";
