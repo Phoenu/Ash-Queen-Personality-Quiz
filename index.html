@@ -1393,8 +1393,8 @@
       </div>
     </section>
 
-  </div>
-
+  </div>
+
   <button class="credits-btn" id="credits-btn" aria-expanded="false">Credits</button>
 
   <div class="credits-panel" id="credits-panel" hidden>
@@ -1403,9 +1403,9 @@
       <div class="credits" id="credits"></div>
       <button class="btn-quiet" id="credits-close">Close</button>
     </div>
-  </div>
-</div>
-
+  </div>
+</div>
+
 <script>
 
 /* ---- setup ---- */
@@ -1414,7 +1414,7 @@ const CREDITS = [
   { who: "Kittypop_Creations",
     what: "World lore, Ash Queen lore, Vessel breakdown, character designs/art" },
   { who: "ImTheWrongMan",
-    what: "Question Scripting, Coding, Lore Writing" }
+    what: "Question Scripting, Coding, Lore Writing, Vessel Descriptions, Shadows of the Soul" }
 ];
 
 const CREDIT_MUSIC = [
@@ -3996,41 +3996,41 @@ $("title").textContent = QUIZ_TITLE;
 $("intro").textContent = QUIZ_INTRO;
 standing.textContent = STANDING_QUESTION;
 
-function renderCredits(){
-  const box = $("credits");
-  if (!box) return;
-  box.textContent = "";
-
-  const people = document.createElement("div");
-  people.className = "credits-row";
-  CREDITS.forEach(c => {
-    const span = document.createElement("span");
-    const name = document.createElement("b");
-    name.textContent = c.who + ": ";
-    span.appendChild(name);
-    span.appendChild(document.createTextNode(c.what));
-    people.appendChild(span);
-  });
-  box.appendChild(people);
-
-  const music = document.createElement("div");
-  music.className = "credits-row";
-  CREDIT_MUSIC.forEach(m => {
-    const span = document.createElement("span");
-    const name = document.createElement("b");
+function renderCredits(){
+  const box = $("credits");
+  if (!box) return;
+  box.textContent = "";
+
+  const people = document.createElement("div");
+  people.className = "credits-row";
+  CREDITS.forEach(c => {
+    const span = document.createElement("span");
+    const name = document.createElement("b");
+    name.textContent = c.who + ": ";
+    span.appendChild(name);
+    span.appendChild(document.createTextNode(c.what));
+    people.appendChild(span);
+  });
+  box.appendChild(people);
+
+  const music = document.createElement("div");
+  music.className = "credits-row";
+  CREDIT_MUSIC.forEach(m => {
+    const span = document.createElement("span");
+    const name = document.createElement("b");
     const found = m.seen === "wight" ? wightSeen() : aliceSeen();
-    name.textContent = ((m.veiled && !found) ? m.veiled : m.what) + ": ";
-    span.appendChild(name);
-    const a = document.createElement("a");
-    a.href = m.url;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    a.textContent = "source";
-    span.appendChild(a);
-    music.appendChild(span);
-  });
-  box.appendChild(music);
-}
+    name.textContent = ((m.veiled && !found) ? m.veiled : m.what) + ": ";
+    span.appendChild(name);
+    const a = document.createElement("a");
+    a.href = m.url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.textContent = "source";
+    span.appendChild(a);
+    music.appendChild(span);
+  });
+  box.appendChild(music);
+}
 function showCredits(open){
   const panel = $("credits-panel");
   const btn = $("credits-btn");
@@ -4046,7 +4046,7 @@ function renderCredits(){
 }
 
 
-renderCredits();
+renderCredits();
 loadSettings();
 initAudio();
 
