@@ -566,7 +566,62 @@
     --gold-faint:rgba(103,89,114,.38);
   }
 
-  .challenge{
+  /* ---------------- the credits ----------------
+     Along the foot of the window, out of the way, and gone whenever the
+     plate is taken over - she does not share the screen. */
+
+  .credits{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:0;
+    z-index:40;
+    padding:10px clamp(12px,3vw,26px) 11px;
+    background:linear-gradient(to top, rgba(0,0,0,.92) 62%, rgba(0,0,0,0));
+    font-family:Karla,"Segoe UI",system-ui,sans-serif;
+    font-size:11px;
+    line-height:1.5;
+    color:#6d6478;
+    text-align:center;
+    pointer-events:auto;
+    opacity:1;
+    transition:opacity .45s ease;
+  }
+
+  .plate.hers ~ .credits,
+  .plate.taken ~ .credits,
+  .plate.solo ~ .credits{
+    opacity:0;
+    pointer-events:none;
+  }
+
+  .credits-row{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:2px 18px;
+  }
+  .credits-row + .credits-row{margin-top:3px}
+
+  .credits b{
+    font-weight:600;
+    color:#9a8aa0;
+    letter-spacing:.02em;
+  }
+  .credits a{
+    color:#8a7a92;
+    text-decoration:none;
+    border-bottom:1px solid rgba(154,138,160,.3);
+  }
+  .credits a:hover{color:var(--gold);border-bottom-color:var(--gold)}
+  .credits a:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+
+  @media (max-width:640px){
+    .credits{font-size:10px;padding-bottom:9px}
+    .credits-row{gap:1px 12px}
+  }
+
+  /* ---------------- the challenge ---------------- */
     min-height:clamp(140px,26vh,200px);
     display:flex;
     align-items:center;
@@ -1293,12 +1348,28 @@
       </div>
     </section>
 
-  </div>
-</div>
-
+  </div>
+
+  <footer class="credits" id="credits"></footer>
+</div>
+
 <script>
 
 /* ---- setup ---- */
+
+const CREDITS = [
+  { who: "Kittypop_Creations",
+    what: "World lore, Ash Queen lore, Vessel breakdown, character designs/art" },
+  { who: "ImTheWrongMan",
+    what: "Question Scripting, Coding, Lore Writing" }
+];
+
+const CREDIT_MUSIC = [
+  { what: "Alice Music", veiled: "??? Music", url: "https://www.youtube.com/watch?v=sJNE5I88UcE" },
+  { what: "Ambience Music", url: "https://www.youtube.com/watch?v=L8MsNJEfySY" },
+  { what: "??? Music",      url: "https://www.youtube.com/watch?v=r7P2bpc45C0" },
+  { what: "Results Music",  url: "https://www.youtube.com/watch?v=oyzoGp4eCB4" }
+];
 
 const QUIZ_TITLE = "Ash Queen Personality Test";
 const QUIZ_INTRO = "Find out what kind of poor soul you truly are.";
@@ -2238,6 +2309,7 @@ function markAlice(id){
 
     marks.forEach(m => m.classList.add("spent"));
     aliceSeenSet(true);
+    renderCredits();
 
     art.src = asset(ALICE_SHOWS);
     wrap.hidden = false;
@@ -3855,6 +3927,42 @@ $("title").textContent = QUIZ_TITLE;
 $("intro").textContent = QUIZ_INTRO;
 standing.textContent = STANDING_QUESTION;
 
+function renderCredits(){
+  const box = $("credits");
+  if (!box) return;
+  box.textContent = "";
+
+  const people = document.createElement("div");
+  people.className = "credits-row";
+  CREDITS.forEach(c => {
+    const span = document.createElement("span");
+    const name = document.createElement("b");
+    name.textContent = c.who + ": ";
+    span.appendChild(name);
+    span.appendChild(document.createTextNode(c.what));
+    people.appendChild(span);
+  });
+  box.appendChild(people);
+
+  const music = document.createElement("div");
+  music.className = "credits-row";
+  CREDIT_MUSIC.forEach(m => {
+    const span = document.createElement("span");
+    const name = document.createElement("b");
+    name.textContent = ((m.veiled && !aliceSeen()) ? m.veiled : m.what) + ": ";
+    span.appendChild(name);
+    const a = document.createElement("a");
+    a.href = m.url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.textContent = "source";
+    span.appendChild(a);
+    music.appendChild(span);
+  });
+  box.appendChild(music);
+}
+
+renderCredits();
 loadSettings();
 initAudio();
 
