@@ -14618,7 +14618,7 @@ function middleOf(q){ return Math.floor(scaleOf(q).length / 2); }
 const SERVED = location.protocol === "http:" || location.protocol === "https:";
 /* where the files come from once online: empty keeps them beside the page; the GitHub
    build writes the asset server's address in here */
-const ASSET_HOST = "";
+const ASSET_HOST = "https://ash-queen-assets.danielpava01.workers.dev/";
 const ASSETS = SERVED && ASSET_HOST ? ASSET_HOST.replace(/\/*$/, "/") : "assets/";
 
 function asset(name){
@@ -19066,15 +19066,9 @@ function guestAhead(word){
   });
 }
 
-/* the guest's words wait for a good many marks, all but the two that are always theirs - and
-   any word that is open to everyone some other way stays open to them the same way */
-const GUEST_MARKS_AT = 8;
-const GUEST_ALWAYS = ["te0yxb", "1abz1om"];
-function guestOpen(k){
-  if (!guestHeld()) return false;
-  if (GUEST_ALWAYS.indexOf(k) !== -1 || badgesHeld().length >= GUEST_MARKS_AT) return true;
-  return k === "1p7l7no" && badgesHeld().length >= CHIBI_AT;
-}
+/* every one of the guest's words is theirs the moment they are in; without the key,
+   whatever is earned is earned the usual way */
+function guestOpen(k){ return guestHeld(); }
 
 /* the guest's words answer only once the guest is in; their own word always does */
 function doorFor(word){
@@ -21051,7 +21045,7 @@ const DOORS = {
     penanceTick();
   },
 
-  nz0j11: () => {
+  gnn1v8: () => {
     /* every mark at once, and quietly - thirteen boasts in a row is no gift */
     try{ localStorage.setItem(BADGE_KEY, JSON.stringify(BADGES.map(b => b.id))); }catch(e){}
     renderBadges();
@@ -21870,7 +21864,7 @@ const DEEP = {
   x1oj3u: () => {
     if (chibiScorned()) return;
     /* she answers to her word only once they hold a few marks */
-    if (badgesHeld().length < CHIBI_AT) return;
+    if (!guestHeld() && badgesHeld().length < CHIBI_AT) return;
     if (chibiHere()) chibiHide(); else chibiShow();
   }
 };
