@@ -7591,6 +7591,16 @@ const MOTE_FIRES = {
   pride: ["#f7e491", "#ffeeb0", "#cbb44e", "#9a8622"]
 };
 
+/* every other vessel's page, and their result, rises in that vessel's own colour - the colour
+   itself and a few shades of it - wherever no fire of its own is set above */
+let vesselLight = null;
+function moteShades(hex){
+  const rgb = hexParts(hex);
+  if (rgb.some(c => isNaN(c))) return MOTE_FIRES.gold;
+  const mix = (to, k) => "#" + rgb.map(c => Math.round(c + (to - c) * k).toString(16).padStart(2, "0")).join("");
+  return [hex, mix(255, 0.18), mix(255, 0.38), mix(0, 0.22)];
+}
+
 const STAR_HALO = { greed: "255,200,0", wrath: "180,32,47", pride: "242,224,138" };
 const STAR_MOTES = 74;
 
@@ -7602,7 +7612,7 @@ function embers(fire){
 
   if (fire && motesLit !== fire){
     motesLit = fire;
-    const lit = MOTE_FIRES[fire] || MOTE_FIRES.gold;
+    const lit = MOTE_FIRES[fire] || (fire.charAt(0) === "#" ? moteShades(fire) : MOTE_FIRES.gold);
     const many = STAR_HALO[fire] ? STAR_MOTES : MOTE_COUNT;
     box.textContent = "";
 
@@ -7637,11 +7647,11 @@ function embers(fire){
 
 /* the result page, and the two of them on their own pages */
 function emberFor(name){
-  if (name === "result") return starWorn ? starWorn.id : "gold";
+  if (name === "result") return starWorn ? starWorn.id : (resultAccent || "gold");
   if (name !== "vessel") return null;
   if (openGuideId === "queen") return "queen";
   if (openGuideId === "veiled") return "alice";
-  return null;
+  return vesselLight;
 }
 
 function screenNow(){
@@ -18428,6 +18438,7 @@ function openVessel(id){
   }
 
   useAccent(v.accent || null);
+  vesselLight = v.accent || null;
   show("vessel");
 }
 
