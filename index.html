@@ -7204,7 +7204,7 @@ const QUESTIONS = [
     scores: { sonic: -1, tails: 1, knuckles: 1, eggman: -1, silver: -1, blaze: 2, big: -1, marine: -1, mighty: 1, honey: -1 } },
 
   { q: "You hold on to a wrong long after the person who did it has forgotten.",
-    scores: { sonic: -1, eggman: 2, silver: 1, shadow: 1, baker: 1, big: 1, fang: 1, amy: -1 } },
+    scores: { sonic: -1, eggman: 2, silver: 1, shadow: 1, baker: 1, big: 1, fang: 1 } },
 
   { q: "You have taken credit for something you haven't done.",
     scores: { tails: 1, knuckles: -1, silver: 1, rouge: 2, honey: 1 } },
@@ -7354,7 +7354,7 @@ const QUESTIONS = [
     scores: { sonic: 1, tails: 1, knuckles: 2, eggman: -1, silver: -2, blaze: 2, shadow: -2, rouge: -1, marine: -1, mighty: 2, honey: -2, fang: 1 } },
 
   { q: "Things stop working the moment they are in your hands.",
-    scores: { tails: 1, amy: 1, baker: 2, marine: 1, blights: 2, mighty: -1 },
+    scores: { tails: 1, baker: 2, marine: 1, blights: 2, mighty: -1 },
     scale: "frequency" },
 
   { q: "You have thrown away something that mattered to someone, because it did not matter to you.",
@@ -7431,7 +7431,7 @@ const QUESTIONS = [
     stands: 18, scores: { tails: -2, knuckles: -1, silver: 2, shadow: 1, rouge: 2, baker: 1, honey: 1, fang: -1, blights: -2 } },
 
   { q: "You rehearse conversations that already happened, and win them the second time.",
-    stands: 8, scores: { sonic: -2, tails: -1, knuckles: 1, eggman: 1, silver: 2, blaze: 2, amy: -1, baker: -1, mighty: 1 } },
+    stands: 8, scores: { sonic: -2, tails: -1, knuckles: 1, eggman: 1, silver: 2, blaze: 2, baker: -1, mighty: 1 } },
 
   { q: "You have waited to be thanked.",
     stands: 3, scores: { sonic: -1, eggman: 1, silver: 2, amy: 2, marine: -1, mighty: -1, fang: -1 } },
@@ -11962,7 +11962,7 @@ function talkOpen(){
   talesRun = 0;
   tailNamed = false;
   storyBack = talkAgain;
-  tellingSet(true);
+  tellingSet(true, true);
   spiteStand(TALK_OPEN, talkPicks(), true);
 }
 
@@ -15406,11 +15406,16 @@ function aliceSureSet(yes){
 
 /* she has taken them past the question and is telling them something - walking
    out of it is the reset going through, not a way back to their vessel */
+/* "2" when it is her own table they sat down at, from their result - walking out of that
+   is only walking back to the result they came from */
 function telling(){
-  try{ return localStorage.getItem(TOLD_KEY) === "1"; }catch(e){ return false; }
+  try{ const v = localStorage.getItem(TOLD_KEY); return v === "1" || v === "2"; }catch(e){ return false; }
 }
-function tellingSet(yes){
-  try{ if (yes) localStorage.setItem(TOLD_KEY, "1"); else localStorage.removeItem(TOLD_KEY); }catch(e){}
+function tellingAtTable(){
+  try{ return localStorage.getItem(TOLD_KEY) === "2"; }catch(e){ return false; }
+}
+function tellingSet(yes, atTable){
+  try{ if (yes) localStorage.setItem(TOLD_KEY, atTable ? "2" : "1"); else localStorage.removeItem(TOLD_KEY); }catch(e){}
 }
 
 /* the third strike shuts the door; what she has to say waits behind it */
@@ -22752,10 +22757,12 @@ if (doubtOpen()){
 }
 
 /* but walking out of a telling is past all that - the reset goes through and
-   they come back to the door, not to the vessel they were leaving */
+   they come back to the door, not to the vessel they were leaving. sat at her own
+   table from their result, though, it is the result they come back to */
 if (telling()){
+  const atTable = tellingAtTable();
   tellingSet(false);
-  clearRun();
+  if (!atTable) clearRun();
 }
 
 const saved = loadRun();
