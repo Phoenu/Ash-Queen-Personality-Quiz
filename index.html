@@ -4408,7 +4408,7 @@ const CEILING = 1;           // highest a score can read
    is 100% (or 0%) for every mark and every star that asks for it */
 function scoreFull(s){ return Math.round(s * 100) >= Math.round(CEILING * 100); }
 function scoreEmpty(s){ return Math.round(s * 100) <= Math.round((1 - CEILING) * 100); }
-const ASSET_VERSION = "85";   // bump to defeat caching
+const ASSET_VERSION = "86";   // bump to defeat caching
 
 /* set up at the top: the first screen is shown long before the rest is reached */
 const SILL_ART = ["c90af9a5b5653515c4d7a8d7e5", "c90af9a5c5653515c4d7a8d7e5",
@@ -6000,6 +6000,12 @@ const VOICE_ON_DISK = new Set(/* voice-list */[
   "Ash Queen Lines/False Stars Tale/AQ False Stars 7.wav",
   "Ash Queen Lines/False Stars Tale/AQ False Stars 8.wav",
   "Ash Queen Lines/False Stars Tale/AQ False Stars 9.wav",
+  "Ash Queen Lines/Fey Tale/AQ Fey Tale 1.wav",
+  "Ash Queen Lines/Fey Tale/AQ Fey Tale 2.wav",
+  "Ash Queen Lines/Fey Tale/AQ Fey Tale 3.wav",
+  "Ash Queen Lines/Fey Tale/AQ Fey Tale 4.wav",
+  "Ash Queen Lines/Fey Tale/AQ Fey Tale 5.wav",
+  "Ash Queen Lines/Fey Tale/AQ Fey Tale 6.wav",
   "Ash Queen Lines/First Tale/AQ First Tale 1.wav",
   "Ash Queen Lines/First Tale/AQ First Tale 10.wav",
   "Ash Queen Lines/First Tale/AQ First Tale 11.wav",
@@ -11622,6 +11628,9 @@ STARS_TALE.forEach(line => FRESH_SAID.push(line));
 /* and her answer when asked about dying */
 DIE_TALE.forEach((line, i) => QUEEN_VOICE_NAMED.push([line, "Death Questions/AQ Death Question " + (i + 1) + ".wav"]));
 DIE_TALE.forEach(line => FRESH_SAID.push(line));
+/* and what she says of fairy tales */
+FEY_TALE.forEach((line, i) => QUEEN_VOICE_NAMED.push([line, "Fey Tale/AQ Fey Tale " + (i + 1) + ".wav"]));
+FEY_TALE.forEach(line => FRESH_SAID.push(line));
 /* and the blessing she can give */
 BLESS_TALE.forEach((line, i) => QUEEN_VOICE_NAMED.push([line, "Blessing/AQ Blessing " + (i + 1) + ".wav"]));
 BLESS_TALE.forEach(line => FRESH_SAID.push(line));
