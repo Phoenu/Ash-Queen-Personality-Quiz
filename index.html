@@ -8,11 +8,13 @@
 <link rel="icon" href="assets/Ash%20Queen%20Icons/ash_queen_icon.png">
 <meta property="og:title" content="Ash Queen Personality Test">
 <meta property="og:description" content="Find out what kind of poor soul you truly are.">
-<meta property="og:image" content="assets/Ash%20Queen%20Icons/crest.png">
+<meta property="og:image" content="https://phoenu.github.io/Ash-Queen-Personality-Quiz/assets/Ash%20Queen%20Icons/crest.png">
+<meta property="og:url" content="https://phoenu.github.io/Ash-Queen-Personality-Quiz/">
 <meta property="og:type" content="website">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Ash Queen Personality Test">
 <meta name="twitter:description" content="Find out what kind of poor soul you truly are.">
+<meta name="twitter:image" content="https://phoenu.github.io/Ash-Queen-Personality-Quiz/assets/Ash%20Queen%20Icons/crest.png">
 <meta name="theme-color" content="#000000">
 <title>Soul Quiz</title>
 <style>
@@ -1709,6 +1711,11 @@
     position:absolute;
     inset:-8px;
   }
+  /* a finger cannot be that exact: on a touch screen the whole answer is open again,
+     and a moment's wait (EXACT_TOUCH_WAIT) keeps it from being rushed instead */
+  @media (hover:none) and (pointer:coarse){
+    .plate.exact .step{pointer-events:auto}
+  }
 
   .step.on .node{
     border-color:var(--gold);
@@ -2976,6 +2983,8 @@
     width:100%;
     max-width:100%;
   }
+  /* where the row before it has a gap, the last one takes the gap instead of a row of its own */
+  .vessel-card.alone.tucked{grid-column:auto;justify-self:stretch;width:auto !important}
 
   .verdict-art.ember{
     cursor:pointer;
@@ -7483,6 +7492,11 @@ const WIND = parseInt(getComputedStyle(document.documentElement)
 let order = [];
 let sealed = new Set();
 let busyGuard = null;
+let answerOpenAt = 0;            /* no answer is taken before this moment */
+const EXACT_TOUCH_WAIT = 500;
+function touchOnly(){
+  try{ return window.matchMedia("(hover:none) and (pointer:coarse)").matches; }catch(e){ return false; }
+}
 let interjectAt = -1;
 let aliceAt = -1;
 let aliceCalled = false;   /* called by name - she comes at the first turn of the next run */
@@ -16492,6 +16506,10 @@ function render(){
   const item = qAt(index);
   const labels = scaleOf(item);
 
+  /* on a touch screen the exact question is open across its whole width, as the rest
+     are - but only once it has been on screen a moment, so a hurried tap goes nowhere */
+  answerOpenAt = item.exact && touchOnly() ? Date.now() + EXACT_TOUCH_WAIT : 0;
+
   if (item.instead && !witCounted && runUpTo(index) >= HALFWIT_RUN){
     witCounted = true;
     witSeenSet(witSeen() + 1);
@@ -16751,6 +16769,7 @@ function guard(ms){
 function choose(i){
   if (busy) return;
   if (i < 0 || i >= steps.length) return;
+  if (Date.now() < answerOpenAt) return;
 
   busy = true;
   guard(1500);
@@ -18317,8 +18336,18 @@ function fitAlone(){
   if (!plain) return;
   const w = plain.getBoundingClientRect().width;
   if (!w) return;
+
+  /* how many fit across, and whether the last full row leaves a space beside it -
+     on a phone the last one fills that space rather than standing alone below it */
+  const list = $("vessel-list");
+  const cols = list ? getComputedStyle(list).gridTemplateColumns.split(" ").filter(Boolean).length : 1;
+  const others = document.querySelectorAll("#vessel-list .vessel-card:not(.alone)").length;
+  const phone = window.matchMedia("(max-width:560px)").matches;
+  const gap = cols > 1 && others % cols !== 0;
+
   document.querySelectorAll(".vessel-card.alone").forEach(c => {
-    c.style.width = w + "px";
+    c.classList.toggle("tucked", phone && gap);
+    c.style.width = phone && gap ? "" : w + "px";
   });
 }
 
@@ -21581,7 +21610,7 @@ function riteSolid(src, u, v){
   if (!(u >= 0 && u < 1 && v >= 0 && v < 1)) return false;
   if (riteRead[src] === undefined){
     const im = riteEl.querySelector(".rite-body img");
-    if (im.getAttribute("data-src") === src && im.complete && im.naturalWidth){
+    if (im.getAttribute("data-src") === src && im.complete && im.naturalWidth && !(SERVED && ASSET_HOST)){
       try{
         const c = document.createElement("canvas");
         c.width = im.naturalWidth; c.height = im.naturalHeight;
@@ -22107,6 +22136,9 @@ async function shareDraw(f, lookAt){
   const load = src => new Promise(done => {
     if (!src){ done(null); return; }
     const im = new Image();
+    /* fetched from elsewhere, a picture must be asked for openly, or the card it is
+       drawn into can be looked at but never saved or sent */
+    if (SERVED && ASSET_HOST) im.crossOrigin = "anonymous";
     im.onload = () => done(im);
     im.onerror = () => done(null);
     im.src = asset(src);
@@ -22420,15 +22452,44 @@ $("share-copy").addEventListener("click", () => {
 
 $("share-link").addEventListener("click", () => shareCopy(SHARE_HOME, "Link copied."));
 
+/* X's own posting link carries words and a link, never a picture - so the card goes with them
+   another way: on a phone through the phone's own sharing (X takes it attached), and on a
+   computer onto the clipboard, ready to be pasted into the post X has just opened */
 $("share-x").addEventListener("click", () => {
   const f = shareFactsNow;
   if (!f) return;
   let said = "My vessel in the " + SHARE_NAME + " is " + f.name + (f.role ? ", " + f.role : "") + ".";
   if (f.quote && (said + f.quote).length < 200) said += "\n“" + f.quote + "”";
   said += "\n\nWho are you? " + SHARE_TAG;
-  window.open("https://twitter.com/intent/tweet?text=" + encodeURIComponent(said) + "&url=" + encodeURIComponent(SHARE_HOME),
-              "_blank", "noopener");
-  shareSay("Opened X in a new tab.");
+  const intent = "https://twitter.com/intent/tweet?text=" + encodeURIComponent(said) + "&url=" + encodeURIComponent(SHARE_HOME);
+
+  if (touchOnly() && navigator.share && shareCardNow){
+    shareBlob().then(async blob => {
+      const file = blob ? new File([blob], shareFileName(), { type: "image/png" }) : null;
+      if (file && navigator.canShare && navigator.canShare({ files: [file], text: said })){
+        try{
+          await navigator.share({ files: [file], text: said + "\n" + SHARE_HOME });
+          shareSay("Pick X to post it with your card.");
+          return;
+        }catch(e){ if (e && e.name === "AbortError") return; }
+      }
+      window.open(intent, "_blank", "noopener");
+      shareSay("Opened X. Save the image above to add it to your post.");
+    });
+    return;
+  }
+
+  /* started before X is opened, while this page still has the focus the clipboard asks for */
+  let copied = null;
+  try{
+    if (shareCardNow && navigator.clipboard && window.ClipboardItem){
+      copied = navigator.clipboard.write([new ClipboardItem({ "image/png": shareBlob().then(b => b || Promise.reject()) })]);
+    }
+  }catch(e){ copied = null; }
+  window.open(intent, "_blank", "noopener");
+  if (!copied){ shareSay("Opened X in a new tab. Save the image above to add it to your post."); return; }
+  shareSay("Opened X with your card copied. Paste it into the post (Ctrl+V).");
+  copied.catch(() => shareSay("Opened X in a new tab. Save the image above to add it to your post."));
 });
 
 $("share-more").addEventListener("click", async () => {
