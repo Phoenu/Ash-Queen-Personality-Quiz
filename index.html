@@ -2985,6 +2985,38 @@
     0%,100%{filter:drop-shadow(0 0 7px rgba(255,138,30,.55)) drop-shadow(0 0 18px rgba(255,74,10,.32))}
     50%    {filter:drop-shadow(0 0 15px rgba(255,196,64,.85)) drop-shadow(0 0 38px rgba(255,88,10,.6))}
   }
+  /* left untouched a while, she says so beneath it */
+  .verdict-hold{position:relative;display:flex;flex:none;align-items:center;justify-content:center;transition:margin-bottom .8s ease}
+  .verdict-hold.whispering{margin-bottom:30px}
+  .verdict-whisper{
+    position:absolute;
+    left:50%;top:calc(100% + 14px);
+    transform:translate(-50%,6px);
+    font-family:var(--display, inherit);
+    font-size:15px;
+    letter-spacing:.03em;
+    color:#ffd27a;
+    white-space:nowrap;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .8s ease, transform .8s ease;
+  }
+  .verdict-whisper::before{
+    content:"";
+    position:absolute;
+    left:50%;top:-11px;
+    width:9px;height:9px;
+    margin-left:-5px;
+    border-left:2px solid currentColor;
+    border-top:2px solid currentColor;
+    transform:rotate(45deg);
+    animation:whisper-nudge 1.2s ease-in-out infinite;
+  }
+  .verdict-hold.whispering .verdict-whisper{opacity:1;transform:translate(-50%,0)}
+  @keyframes whisper-nudge{
+    0%,100%{transform:translateY(0) rotate(45deg)}
+    50%    {transform:translateY(-4px) rotate(45deg)}
+  }
 
   .vow-panel{
     position:fixed;
@@ -3390,6 +3422,7 @@
      would have faded away is simply gone */
   @media (prefers-reduced-motion:reduce){
     .verdict-art.ember,
+    .verdict-whisper::before,
     input[type=range].tuning,
     body.risen .plate,
     .challenge-q.typing::after,
@@ -3620,7 +3653,7 @@
     <!-- ===================== RESULT ===================== -->
     <section class="screen" id="s-result">
       <div class="verdict">
-        <img class="verdict-art" id="verdict-art" alt="" tabindex="0" role="button" aria-label="Your vessel">
+        <span class="verdict-hold"><img class="verdict-art" id="verdict-art" alt="" tabindex="0" role="button" aria-label="Your vessel"><span class="verdict-whisper" id="verdict-whisper" aria-live="polite"></span></span>
         <div class="verdict-copy">
           <p class="eyebrow" id="verdict-eyebrow">Who you truly are</p>
           <h1 id="verdict-title"></h1>
@@ -4017,6 +4050,13 @@ const CREDITS = [
     face: "Credits/beettle0101.png",
     socials: [
       { where: "YouTube", url: "https://www.youtube.com/@Beettle0101" }
+    ] },
+  { who: "ExpresslyVOs",
+    what: "Sonic/Mighty VA",
+    face: "Credits/expresslyvos.png",
+    socials: [
+      { where: "YouTube", url: "https://www.youtube.com/@expresslyvos" },
+      { where: "X", url: "https://x.com/expresslyvos" }
     ] }
 ];
 
@@ -4344,7 +4384,7 @@ const TALLY_BOTTOM = 3;   // furthest shown
 
 const SPREAD = 2.8;          // how far scores push from the middle
 const CEILING = 1;           // highest a score can read
-const ASSET_VERSION = "83";   // bump to defeat caching
+const ASSET_VERSION = "84";   // bump to defeat caching
 
 /* set up at the top: the first screen is shown long before the rest is reached */
 const SILL_ART = ["c90af9a5b5653515c4d7a8d7e5", "c90af9a5c5653515c4d7a8d7e5",
@@ -7471,9 +7511,39 @@ function aliceWearTo(el, art){
   el.classList.add("on");
 }
 let aliceBlinkTimer = null;
-const aliceHeard = new Map();
+
+/* every line she has a recording for is known from the start, but its clip is only made
+   the first time it is wanted - a visit fetches what it hears, not the whole cast */
+function voiceStore(){
+  const waiting = new Map(), made = new Map();
+  return {
+    has: key => made.has(key) || waiting.has(key),
+    get: key => {
+      if (made.has(key)) return made.get(key);
+      const make = waiting.get(key);
+      if (!make) return undefined;
+      waiting.delete(key);
+      const clip = make();
+      if (clip) made.set(key, clip);
+      return clip || undefined;
+    },
+    set: (key, clip) => { waiting.delete(key); made.set(key, clip); },
+    later: (key, make) => { if (!made.has(key)) waiting.set(key, make); },
+    /* only the clips already made - nothing else can be sounding */
+    forEach: fn => made.forEach(fn),
+    get size(){ return made.size + waiting.size; }
+  };
+}
+
+function voiceClip(path){
+  const heard = new Audio(asset(path));
+  heard.preload = "metadata";
+  return heard;
+}
+
+const aliceHeard = voiceStore();
 let aliceHeardNow = null;
-const queenVoices = new Map();
+const queenVoices = voiceStore();
 let aliceVoice = null;
 let queenVoice = null;
 let queenVoiceTimer = null;
@@ -10849,7 +10919,8 @@ function stockUp(){
       return;
     }
     const track = played.shift();
-    if (!track) return;
+    /* opened straight from disk there is no cache to warm, and the asking only fails */
+    if (!track || !SERVED) return;
     /* only warming the cache - a failure here is nothing to report */
     try{ fetch(asset(track)).catch(() => {}); }catch(e){}
     setTimeout(next, STOCK_GAP);
@@ -10930,7 +11001,7 @@ function queenSay(parts, after){
     const onward = () => {
       at++;
       line.classList.remove("shown");
-      if (at < parts.length){ trialSwap = setTimeout(speak, 380); return; }
+      if (at < parts.length){ trialSwap = setTimeout(() => voiceReady(parts[at].heard || parts[at].say, speak), 380); return; }
       try{ after(); }catch(e){ sceneRescue(e); }
     };
     if (part.hold) trialTimer = setTimeout(onward, part.hold);
@@ -10939,8 +11010,32 @@ function queenSay(parts, after){
 
   queenLineSwap(() => {
     line.classList.remove("shown", "dire", "plain", "paired");
-    speak();
+    voiceReady(parts[0].heard || parts[0].say, speak);
   });
+}
+
+/* her words and her voice arrive together: a line whose recording is still on its way
+   waits a moment for it, never long, before it is shown. the wait sits in trialSwap,
+   so a scene quieted meanwhile does not come back */
+const VOICE_READY_MOST = 700;
+function voiceReady(text, go){
+  const heard = queenMaySpeak() && settings.sound > 0 ? queenVoices.get(text) : null;
+  if (!heard || heard.readyState >= 3 || heard.error){ go(); return; }
+
+  let token = null;
+  const ready = () => {
+    heard.removeEventListener("canplay", ready);
+    if (trialSwap !== token) return;
+    clearTimeout(token);
+    trialSwap = null;
+    go();
+  };
+  heard.addEventListener("canplay", ready);
+  if (heard.preload !== "auto"){
+    heard.preload = "auto";
+    try{ heard.load(); }catch(e){}
+  }
+  token = trialSwap = setTimeout(ready, VOICE_READY_MOST);
 }
 
 const WHY_BLINK = 230;
@@ -11793,9 +11888,18 @@ function doubtStory(easy){
 
 /* she will be talked to once a visit - a fresh page and she is willing again */
 let talkSpentNow = false;
-/* a guest is turned away only for as long as her short wait runs */
-function talkSpent(){ return talkSpentNow && !(guestHeld() && mirthLeft() <= 0); }
-function talkSpentSet(yes){ talkSpentNow = !!yes; }
+/* kept through a reload - turned away, a refresh is no way back to her table.
+   a guest is turned away only for as long as her short wait runs */
+const TALK_SPENT_KEY = "ash-queen-spent";
+function talkSpent(){
+  let spent = talkSpentNow;
+  try{ spent = spent || localStorage.getItem(TALK_SPENT_KEY) === "1"; }catch(e){}
+  return spent && !(guestHeld() && mirthLeft() <= 0);
+}
+function talkSpentSet(yes){
+  talkSpentNow = !!yes;
+  try{ if (yes) localStorage.setItem(TALK_SPENT_KEY, "1"); else localStorage.removeItem(TALK_SPENT_KEY); }catch(e){}
+}
 
 /* she will only be spoken to on her own page, and only once they have
    shown her enough to be worth the time */
@@ -11857,11 +11961,13 @@ function enoughSaid(){
   tellingSet(false);
   crownFixed = true;
   crownLoop(null);
+  /* set before she speaks, so leaving mid-word does not get them out of it */
+  mirthWrite(Date.now() + MIRTH_WAIT, Date.now());
+  mirthOwedSet(true);
 
   queenSay([{ face: CROWN_SHUT_WROTH, say: TALK_ENOUGH }], () => {
     /* she is done being asked, so she hands them the five minutes instead */
     mirthWrite(Date.now() + MIRTH_WAIT, Date.now());
-    mirthOwedSet(true);
     mirthTick();
 
     trialTimer = setTimeout(() => {
@@ -12040,13 +12146,15 @@ function doubtSelf(){
 }
 
 function doubtFun(){
+  /* set before she speaks, so leaving mid-word does not get them out of it */
+  mirthWrite(Date.now() + MIRTH_WAIT, Date.now());
+  mirthOwedSet(true);
   queenSay([
     { face: CROWN_SHUT_AGAIN, say: MIRTH_ASK },
     { face: CROWN_OPEN[0],    say: MIRTH_FINE },
     { face: CROWN_ELEVEN,     say: MIRTH_GIVE }
   ], () => {
     mirthWrite(Date.now() + MIRTH_WAIT, Date.now());
-    mirthOwedSet(true);
     mirthTick();
     doubtDone();
   });
@@ -12361,6 +12469,12 @@ function spiteMore(){
 
   const says = SPITE_STRIKES[nth - 1];
   const last = nth >= 3;
+
+  /* the third shuts the door the moment it is given, not once she has finished saying so */
+  if (last){
+    spiteOwedSet(true);
+    mirthWrite(Date.now() + SPITE_WAIT, Date.now(), SPITE_WAIT);
+  }
 
   spiteStand(says[0][0], null);
   crownFixed = true;
@@ -13115,10 +13229,15 @@ function queenNamed(text){
   return "";
 }
 
+/* the names a line's clip may be found under */
+function queenHearNames(where, text){
+  const own = queenNamed(text);
+  return (own ? [own] : queenFiles(text).map(name => where + name)).filter(voiceOnDisk);
+}
+
 /* one clip, reaching for each name in turn until one answers */
 function queenHear(where, text){
-  const own = queenNamed(text);
-  const names = (own ? [own] : queenFiles(text).map(name => where + name)).filter(voiceOnDisk);
+  const names = queenHearNames(where, text);
   if (!names.length) return null;
 
   const heard = new Audio();
@@ -14622,6 +14741,8 @@ const ASSET_HOST = "https://ash-queen-assets.danielpava01.workers.dev/";
 const ASSETS = SERVED && ASSET_HOST ? ASSET_HOST.replace(/\/*$/, "/") : "assets/";
 
 function asset(name){
+  /* online, every recording is kept a tenth of the size - the same sound, pressed smaller */
+  if (SERVED && ASSET_HOST) name = name.replace(/\.wav$/i, ".mp3");
   const p = ASSETS + name.split(" ").join("%20");
   return SERVED ? p + "?v=" + ASSET_VERSION : p;
 }
@@ -15855,31 +15976,24 @@ function initAudio(){
   /* a line whose recording is not on disk yet is simply typed in silence */
   ALICE_HEARD.forEach(said => {
     if (!voiceOnDisk(ALICE_VOICE_DIR + said[1])) return;
-    const heard = new Audio(asset(ALICE_VOICE_DIR + said[1]));
-    heard.preload = "metadata";
-    aliceHeard.set(said[0], heard);
+    aliceHeard.later(said[0], () => voiceClip(ALICE_VOICE_DIR + said[1]));
   });
 
   alicePartings().forEach(said => {
     if (aliceHeard.has(said[0]) || !voiceOnDisk(ALICE_VOICE_DIR + said[1])) return;
-    const heard = new Audio(asset(ALICE_VOICE_DIR + said[1]));
-    heard.preload = "metadata";
-    aliceHeard.set(said[0], heard);
+    aliceHeard.later(said[0], () => voiceClip(ALICE_VOICE_DIR + said[1]));
   });
 
   queenPartings().forEach(said => {
     if (queenVoices.has(said[0]) || !voiceOnDisk(QUEEN_VOICE_DIR + said[1])) return;
-    const heard = new Audio(asset(QUEEN_VOICE_DIR + said[1]));
-    heard.preload = "metadata";
-    queenVoices.set(said[0], heard);
+    queenVoices.later(said[0], () => voiceClip(QUEEN_VOICE_DIR + said[1]));
   });
 
   QUEEN_VOICE.forEach(group => {
     const where = QUEEN_VOICE_DIR + (group[1] || "");
     group[0].forEach(text => {
-      if (queenVoices.has(text)) return;
-      const heard = queenHear(where, text);
-      if (heard) queenVoices.set(text, heard);
+      if (queenVoices.has(text) || !queenHearNames(where, text).length) return;
+      queenVoices.later(text, () => queenHear(where, text));
     });
   });
 
@@ -15887,9 +16001,8 @@ function initAudio(){
      and nothing above would ever reach for it - her tales are all of this
      kind, and went silent for it */
   QUEEN_VOICE_NAMED.forEach(said => {
-    if (queenVoices.has(said[0])) return;
-    const heard = queenHear("", said[0]);
-    if (heard) queenVoices.set(said[0], heard);
+    if (queenVoices.has(said[0]) || !queenHearNames("", said[0]).length) return;
+    queenVoices.later(said[0], () => queenHear("", said[0]));
   });
 
   music.addEventListener("timeupdate", musicTimeSave);
@@ -17437,6 +17550,31 @@ function markEmber(id){
   /* no one swears to what she has already taken */
   vowId = (id && TRAITS[id] && !isDoomed(id)) ? id : null;
   art.classList.toggle("ember", !!vowId && !voted());
+  whisperWait();
+}
+
+/* the glow alone is easily taken for ornament: left untouched a while, she says what it is for */
+const VERDICT_WHISPER = "It is yours to claim.";
+const WHISPER_AFTER = 5000;
+let whisperTimer = null;
+
+function whisperHush(){
+  clearTimeout(whisperTimer);
+  whisperTimer = null;
+  const art = $("verdict-art");
+  if (art && art.parentElement) art.parentElement.classList.remove("whispering");
+}
+
+function whisperWait(){
+  whisperHush();
+  const art = $("verdict-art");
+  if (!art || !art.classList.contains("ember")) return;
+  whisperTimer = setTimeout(() => {
+    whisperTimer = null;
+    if (!art.classList.contains("ember") || art.hidden || voted() || !screens.result.classList.contains("on")) return;
+    $("verdict-whisper").textContent = VERDICT_WHISPER;
+    art.parentElement.classList.add("whispering");
+  }, WHISPER_AFTER);
 }
 
 /* a panel fades before it is hidden; opened again inside that fade, the pending
@@ -20676,10 +20814,6 @@ const DOORS = {
     else if (screens.vessel.classList.contains("on") && !openGuideId) openVessel("big");
   },
 
-  oscnmy: () => {
-    padSee();
-  },
-
   /* nothing at all unless the strand has been pulled */
   "1fsqest": () => {
     if (!strandOpen()) return;
@@ -20698,64 +20832,6 @@ const DOORS = {
     document.head.appendChild(sheet);
   },
 
-
-
-  "7haj38": () => {
-    doomedSet(Object.keys(TRAITS));
-    votedClear();
-    renderVessels();
-    deity();
-  },
-
-  "1l94xz8": () => {
-    strikesSet(0);
-    vigilClear();
-    penanceTick();
-  },
-
-  rdf4ru: () => {
-    queenLines();
-  },
-
-  "50zelv": () => {
-    frogBlink();
-  },
-
-  "f0gevw": () => {
-    witSeenSet(0);
-  },
-
-  "pku54g": () => {
-    trialQuiet();
-    release();
-    age = OF_AGE;
-    forceWinner = "baker";
-    finish();
-  },
-
-  "1ejkxfh": () => {
-    trialQuiet();
-    release();
-    lecture(WIGHT_SCOLD, () => { show("start"); fadeInMusic(1600); }, true);
-  },
-
-  "2zqpvt": () => {
-    trialQuiet();
-    release();
-
-    const line = $("trial-line");
-    $("trial-row").hidden = true;
-    $("trial-clock").hidden = true;
-    $("doom-row").hidden = true;
-    line.classList.remove("shown", "dire", "plain", "paired");
-    line.textContent = "";
-
-    show("trial");
-    fadeOutMusic(TRIAL_HUSH);
-    crownShow();
-    deityParting();
-  },
-
   "1qj4vtt": () => {
     spurn();
   },
@@ -20765,57 +20841,10 @@ const DOORS = {
     forestKingDoor(false);
   },
 
-  "1oykij9": () => {
-    glagSeat();
-    forestKingDoor(true);
-  },
-
-  "b830d6": () => {
-    glagSeat();
-    forestKingDoor(true, true);
-  },
-
   "1m0gb4a": () => {
     if (!glagOut()) return;   /* the way opens only with the little one already loose */
     glagSeat();
     nullBegin();
-  },
-
-  /* the one from the void, let loose on its own to be looked at */
-  "h6v8pc": () => {
-    glagSeat();
-    voidGlagLoose();
-  },
-
-  /* the void's own, let loose on its own to be looked at */
-  "1ca1gpl": () => {
-    glagSeat();
-    extremeGlagLoose();
-  },
-
-  /* straight to his second fight: his go begun, the pile already heaped, and his refusal behind them */
-  "sej64j": () => {
-    DOORS["r20yg9"]();
-    if (!signetOn()) return;
-    const more = QUESTIONS.map((q, i) => i).filter(i => order.indexOf(i) === -1);
-    for (let i = more.length - 1; i > 0; i--){
-      const j = Math.floor(Math.random() * (i + 1));
-      const t = more[i]; more[i] = more[j]; more[j] = t;
-    }
-    order = order.concat(more);
-    signetGrown = true;
-    signetPhaseTwo();
-    index = NULL_ASKS;
-    render();
-  },
-
-  /* straight to his very last, every question already behind them */
-  "m4na6v": () => {
-    DOORS["sej64j"]();
-    if (!signetOn()) return;
-    index = order.length - 1;
-    render();
-    setTimeout(() => { if (signetKit && signetKit.alive()) signetStand(); }, 400);
   },
 
   /* straight to the last of them: the door opened, twenty goes behind them, and Begin pressed */
@@ -20830,152 +20859,6 @@ const DOORS = {
     start();
   },
 
-  "24src": () => {
-    for (let i = 0; i < FOREST_KING_HOST; i++) forestKingLoose(false);
-  },
-
-  holip9: () => {
-    for (let i = 0; i < FOREST_KING_HOST; i++) forestKingLoose(true, true);
-  },
-
-  "1z0hiv6": () => {
-    freshStop();
-    freshHear(0);
-  },
-
-  /* her question, from a clean slate - this one also puts back whatever
-     the doors below have done, her face included */
-  "1wo4pg4": () => {
-    STARS.forEach(s => starWin(s.id, true));
-    renderVessels();
-    openSupers();
-  },
-
-  "1prt3zc": () => {
-    trialQuiet();
-    release();
-    keptClear();
-    temperSet(0);
-    sulkedSet(false);
-    scornedSet(false);
-    spiteOwedSet(false);
-    aliceSureSet(false);
-    starsForget();
-    peaksForget();
-    starWaitingSet(false);
-    mirthClear();
-    renderGuides();
-    spiteAsk();
-  },
-
-  "nxthi": () => {
-    trialQuiet();
-    release();
-    temperSet(0);
-    sulkedSet(true);
-    spiteMore();
-  },
-
-  "14nkylo": () => {
-    trialQuiet();
-    release();
-    temperSet(1);
-    sulkedSet(false);
-    spiteMore();
-  },
-
-  "4bsoy8": () => {
-    trialQuiet();
-    release();
-    mirthClear();
-    spiteOwedSet(false);
-    temperSet(3);
-    spiteSentence();
-  },
-
-  "1uorygc": () => {
-    trialQuiet();
-    release();
-    mirthClear();
-    mirthOwedSet(false);
-    mirthSay(() => { show("start"); fadeInMusic(1600); });
-  },
-
-  "1ewg13g": () => {
-    trialQuiet();
-    release();
-    scornedSet(true);
-    renderGuides();
-    spiteHush();
-  },
-
-  "10rcofr": () => {
-    trialQuiet();
-    release();
-    temperSet(2);
-    sulkedSet(false);
-    spiteMore();
-  },
-
-  "1tq9yk4": () => {
-    trialQuiet();
-    release();
-    /* the scene hands back to the quiz, so step out of it once it has */
-    aliceTurns(() => setTimeout(() => show("start"), 40));
-  },
-
-  "1q7cpcd": () => {
-    if (!voted()){
-      const had = lastVerdict && lastVerdict.winner ? lastVerdict.winner : Object.keys(TRAITS)[0];
-      votedSet(had);
-    }
-    strikesSet(3);
-    vigilClear();
-    doomTold = false;
-    doomFall();
-  },
-
-  praq0k: () => {
-    trialQuiet();
-    release();
-    doomTold = false;
-    if (!voted()){
-      const had = lastVerdict && lastVerdict.winner ? lastVerdict.winner : Object.keys(TRAITS)[0];
-      votedSet(had);
-    }
-    strikesSet(3);
-    atonedSet(false);
-    vigilWrite(Date.now() + strikeWait(), Date.now());
-    renderVessels();
-    penanceTick();
-    show("start");
-  },
-
-  "1nr6gwn": () => {
-    trial(() => { show("start"); fadeInMusic(1600); }, {
-      lines: TRIAL_AGAIN_LINES,
-      ask: TRIAL_AGAIN_ASK,
-      deny: TRIAL_DENY,
-      omen: false, dire: false, clock: false, idle: true
-    });
-  },
-
-  "1kg8e0a": () => {
-    trialQuiet();
-    release();
-    strike(strikeWords(1), false, () => {
-      release();
-      penanceTick();
-      show("start");
-    }, null, DARK_ONE);
-  },
-
-  "18xqegl": () => {
-    trialQuiet();
-    release();
-    openVictim();
-  },
-
   /* she is called, and comes at the very next turn of the page */
   "11ht1wn": () => {
     aliceCalled = true;
@@ -20984,17 +20867,6 @@ const DOORS = {
   /* the next run is seen as the vessels would see it */
   j90lba: () => {
     sightArmed = true;
-  },
-
-  "169u4eb": () => {
-    vigilWrite(Date.now() + 10000, Date.now());
-    penanceTick();
-  },
-
-  "10aijp6": () => {
-    const kept = mirthRead();
-    if (kept) mirthWrite(Date.now() + 10000, Date.now(), kept.span);
-    mirthTick();
   },
 
   "1ti9fgk": () => {
@@ -21066,36 +20938,7 @@ const DOORS = {
     renderCredits();
     cheatWatch(screens.start.classList.contains("on"));
     if (screens.vessels.classList.contains("on")){ renderGuides(); fitAlone(); }
-  },
-
-  agms0f: () => {
-    boredOnceSet(true);
-    quizDoneSet(true);
-    atonedSet(true);
-    strikesSet(0);
-    vigilClear();
-    doomedSet(null);
-    witSeenSet(0);
-    doubtSeenSet(false);
-    doubtMetSet(false);
-    doubtShownSet(false);
-    doubtOpenSet(false);
-    mirthClear();
-    mirthOwedSet(false);
-    thirdSeenSet(0);
-    wightRunsSet(0);
-    trialForget();
-    midRunSet(false);
-    trialSeen = false;
-    penanceTick();
-  },
-
-  en845w: () => {
-    trialQuiet();
-    release();
-    openPick();
-  }
-};
+  }};
 
 /* six passes over a typed word. every one of them throws something away,
    so nothing here can be read back into the word that made it */
@@ -22043,6 +21886,7 @@ $("wisp-no").addEventListener("click", () => { if (aliceAnswer){ const a = alice
 
 /* their vessel is the way to everyone else's: the vote and the poll, or for a wight, the world */
 $("verdict-art").addEventListener("click", () => {
+  whisperHush();
   /* the remains of one she took answer nothing, for one with no vessel of their own */
   if (!starWorn && $("verdict-art").classList.contains("lost") && !voted()) return;
   if (starWorn) starOwn();
