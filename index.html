@@ -2994,18 +2994,44 @@
     0%,100%{filter:drop-shadow(0 0 7px rgba(255,138,30,.55)) drop-shadow(0 0 18px rgba(255,74,10,.32))}
     50%    {filter:drop-shadow(0 0 15px rgba(255,196,64,.85)) drop-shadow(0 0 38px rgba(255,88,10,.6))}
   }
-  /* and embers drawn in to it out of the dark, so it is plainly something to be touched */
+  /* left untouched a while, she says what it is for - above it, laid over the page so
+     nothing beneath is moved by so much as a pixel */
   .verdict-hold{position:relative;display:flex;flex:none;align-items:center;justify-content:center}
-  .verdict-hold .verdict-art{position:relative;z-index:1}
-  .verdict-embers{
+  .verdict-whisper{
     position:absolute;
-    left:50%;top:50%;
-    width:300px;height:300px;
-    margin:-150px 0 0 -150px;
+    left:50%;bottom:calc(100% + 14px);
+    transform:translate(-50%,-6px);
+    font-family:var(--display, inherit);
+    font-size:15px;
+    letter-spacing:.03em;
+    color:#ffd27a;
+    white-space:nowrap;
+    opacity:0;
     pointer-events:none;
-    z-index:0;
+    z-index:2;
+    transition:opacity .8s ease, transform .8s ease;
   }
-  .verdict-embers[hidden]{display:none}
+  .verdict-whisper::after{
+    content:"";
+    position:absolute;
+    left:50%;top:calc(100% + 2px);
+    width:9px;height:9px;
+    margin-left:-5px;
+    border-right:2px solid currentColor;
+    border-bottom:2px solid currentColor;
+    transform:rotate(45deg);
+    animation:whisper-nudge 1.2s ease-in-out infinite;
+  }
+  .verdict-hold.whispering .verdict-whisper{opacity:1;transform:translate(-50%,0)}
+  /* a phone leaves little room above it: smaller, and close enough that the arrow rests on it */
+  @media (max-width:560px){
+    .verdict-whisper{bottom:calc(100% + 2px);font-size:13px}
+    .verdict-whisper::after{top:calc(100% - 1px);width:7px;height:7px;margin-left:-4px}
+  }
+  @keyframes whisper-nudge{
+    0%,100%{transform:translateY(0) rotate(45deg)}
+    50%    {transform:translateY(4px) rotate(45deg)}
+  }
 
   .vow-panel{
     position:fixed;
@@ -3411,6 +3437,7 @@
      would have faded away is simply gone */
   @media (prefers-reduced-motion:reduce){
     .verdict-art.ember,
+    .verdict-whisper::after,
     input[type=range].tuning,
     body.risen .plate,
     .challenge-q.typing::after,
@@ -3641,7 +3668,7 @@
     <!-- ===================== RESULT ===================== -->
     <section class="screen" id="s-result">
       <div class="verdict">
-        <span class="verdict-hold"><img class="verdict-art" id="verdict-art" alt="" tabindex="0" role="button" aria-label="Your vessel"><canvas class="verdict-embers" id="verdict-embers" aria-hidden="true" hidden></canvas></span>
+        <span class="verdict-hold"><img class="verdict-art" id="verdict-art" alt="" tabindex="0" role="button" aria-label="Your vessel"><span class="verdict-whisper" id="verdict-whisper" aria-live="polite"></span></span>
         <div class="verdict-copy">
           <p class="eyebrow" id="verdict-eyebrow">Who you truly are</p>
           <h1 id="verdict-title"></h1>
@@ -17594,76 +17621,32 @@ function markEmber(id){
   /* no one swears to what she has already taken */
   vowId = (id && TRAITS[id] && !isDoomed(id)) ? id : null;
   art.classList.toggle("ember", !!vowId && !voted());
-  emberWatch();
+  whisperWait();
 }
 
-/* the glow alone is easily taken for ornament: embers drift in out of the dark and gather on
-   it for as long as it may be claimed, so it is plainly something to be touched */
-const EMBER_MANY = 34;
-let emberLoop = null;
+/* the glow alone is easily taken for ornament: left untouched a while, she says what it is for */
+const VERDICT_WHISPER = "It is yours to claim.";
+const WHISPER_AFTER = 5000;
+let whisperTimer = null;
 
-function emberStop(){
-  if (emberLoop) cancelAnimationFrame(emberLoop);
-  emberLoop = null;
-  const cv = $("verdict-embers");
-  if (cv) cv.hidden = true;
-}
-
-function emberWatch(){
+function whisperHush(){
+  clearTimeout(whisperTimer);
+  whisperTimer = null;
   const art = $("verdict-art");
-  const cv = $("verdict-embers");
-  if (!art || !cv) return;
-  if (!art.classList.contains("ember")){ emberStop(); return; }
-  if (emberLoop) return;
-  if (window.matchMedia("(prefers-reduced-motion:reduce)").matches) return;
-
-  cv.hidden = false;
-  const W = cv.width = 300, H = cv.height = 300;
-  const g = cv.getContext("2d");
-  const born = () => {
-    const turn = Math.random() * Math.PI * 2, far = 120 + Math.random() * 30;
-    return { x: W / 2 + Math.cos(turn) * far, y: H / 2 + Math.sin(turn) * far,
-             spin: (Math.random() < 0.5 ? -1 : 1) * (0.5 + Math.random() * 0.7),
-             size: 0.8 + Math.random() * 1.8, heat: 140 + Math.floor(Math.random() * 90), pace: 0.55 + Math.random() * 0.5 };
-  };
-  const sparks = [];
-  for (let i = 0; i < EMBER_MANY; i++){
-    const s = born();
-    /* scattered along their way already, so it does not begin as a ring */
-    const k = Math.random();
-    s.x = W / 2 + (s.x - W / 2) * (0.35 + 0.65 * k);
-    s.y = H / 2 + (s.y - H / 2) * (0.35 + 0.65 * k);
-    sparks.push(s);
-  }
-
-  const step = () => {
-    if (!art.classList.contains("ember")){ emberStop(); return; }
-    /* not where it can be seen just now - looked in on now and then, not drawn */
-    if (art.hidden || !screens.result.classList.contains("on")){
-      g.clearRect(0, 0, W, H);
-      emberLoop = null;
-      setTimeout(() => { if (!emberLoop && art.classList.contains("ember")) emberLoop = requestAnimationFrame(step); }, 400);
-      return;
-    }
-    g.clearRect(0, 0, W, H);
-    for (let i = 0; i < sparks.length; i++){
-      const s = sparks[i];
-      const dx = W / 2 - s.x, dy = H / 2 - s.y, d = Math.hypot(dx, dy) || 1;
-      s.x += (dx / d) * s.pace + (-dy / d) * s.spin * 0.8;
-      s.y += (dy / d) * s.pace + (dx / d) * s.spin * 0.8;
-      if (d < 34){ sparks[i] = born(); continue; }
-      /* faint at the edge of the dark, brightest just before they reach it */
-      const glow = Math.max(0, Math.min(1, (150 - d) / 60)) * Math.min(1, d / 50);
-      g.fillStyle = "rgba(255," + s.heat + ",40," + (0.85 * glow).toFixed(3) + ")";
-      g.beginPath();
-      g.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-      g.fill();
-    }
-    emberLoop = requestAnimationFrame(step);
-  };
-  emberLoop = requestAnimationFrame(step);
+  if (art && art.parentElement) art.parentElement.classList.remove("whispering");
 }
 
+function whisperWait(){
+  whisperHush();
+  const art = $("verdict-art");
+  if (!art || !art.classList.contains("ember")) return;
+  whisperTimer = setTimeout(() => {
+    whisperTimer = null;
+    if (!art.classList.contains("ember") || art.hidden || voted() || !screens.result.classList.contains("on")) return;
+    $("verdict-whisper").textContent = VERDICT_WHISPER;
+    art.parentElement.classList.add("whispering");
+  }, WHISPER_AFTER);
+}
 /* a panel fades before it is hidden; opened again inside that fade, the pending
    hide must not take it away a moment after it came back */
 function panelOpen(panel){
@@ -21987,6 +21970,7 @@ $("wisp-no").addEventListener("click", () => { if (aliceAnswer){ const a = alice
 
 /* their vessel is the way to everyone else's: the vote and the poll, or for a wight, the world */
 $("verdict-art").addEventListener("click", () => {
+  whisperHush();
   /* the remains of one she took answer nothing, for one with no vessel of their own */
   if (!starWorn && $("verdict-art").classList.contains("lost") && !voted()) return;
   if (starWorn) starOwn();
