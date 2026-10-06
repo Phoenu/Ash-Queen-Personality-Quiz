@@ -4410,7 +4410,7 @@ const CEILING = 1;           // highest a score can read
    is 100% (or 0%) for every mark and every star that asks for it */
 function scoreFull(s){ return Math.round(s * 100) >= Math.round(CEILING * 100); }
 function scoreEmpty(s){ return Math.round(s * 100) <= Math.round((1 - CEILING) * 100); }
-const ASSET_VERSION = "86";   // bump to defeat caching
+const ASSET_VERSION = "87";   // bump to defeat caching
 
 /* set up at the top: the first screen is shown long before the rest is reached */
 const SILL_ART = ["c90af9a5b5653515c4d7a8d7e5", "c90af9a5c5653515c4d7a8d7e5",
@@ -4444,7 +4444,7 @@ const SOUND_HOVER = "Misc/clicky.mp3";
 const RESULT_MUSIC = "Music/cheyo.mp3";
 const QUIZ_MUSIC = "Music/quiz_music.mp3";
 const DOOM_MUSIC = "Music/castigation.mp3";   // and this, for as long as she holds the door
-const QUEEN_THEME = "Music/theme_q.mp3";      // hers, while she is there to be spoken with
+const QUEEN_THEME = "Music/theme_queen.mp3";  // hers, while she is there to be spoken with
 let guideOwn = null;    // a guide's own music, while it is the one let in
 let guideHome = null;   // and what the page had before it
 const TALK_DIM = 0.8;   // her music, a fifth lower while she is being spoken with
@@ -4454,7 +4454,7 @@ let dimTimer = null;
 const TRACK_GAIN = {
   "Music/cheyo.mp3": 0.5,
   "Music/theme_b.mp3": 0.3,
-  "Music/theme_q.mp3": 0.285, // mastered louder - brought down to sit where the result's does
+  "Music/theme_queen.mp3": 0.403, // three softer than the one it replaced, so raised to sit where that one did
   [FALLEN_MUSIC]: 0.141, // louder again - brought down the same way
   [NULL_MUSIC]: 0.126, // mastered far louder than the rest, and brought down further on request
   [SIGNET_MUSIC]: 0.08 // louder still - brought down to sit where the quiz's own does
@@ -6269,6 +6269,32 @@ const VOICE_ON_DISK = new Set(/* voice-list */[
   "Ash Queen Lines/The Doubt/Quit Your Trifling Now.wav",
   "Ash Queen Lines/The Doubt/What Are You Doing Are You Not Satisfied With Your Result.wav",
   "Ash Queen Lines/The Doubt/Why Do You Choose To Test My Patience Then.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 1.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 10.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 11.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 12.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 13.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 14.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 15.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 16.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 17.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 18.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 19.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 2.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 20.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 21.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 22.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 23.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 24.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 25.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 26.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 3.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 4.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 5.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 6.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 7.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 8.wav",
+  "Ash Queen Lines/Vessels Tale/AQ Vessels Tale 9.wav",
   "Ash Queen Lines/Wight Part 1/AQ Return Ask.wav",
   "Ash Queen Lines/Wight Part 1/AQ Wight Again.wav",
   "Ash Queen Lines/Wight Part 1/Are You Simply Trying To Seek Out New Opportunities Without Thinking For Yourself.wav",
@@ -11640,6 +11666,9 @@ STARS_TALE.forEach(line => FRESH_SAID.push(line));
 /* and her answer when asked about dying */
 DIE_TALE.forEach((line, i) => QUEEN_VOICE_NAMED.push([line, "Death Questions/AQ Death Question " + (i + 1) + ".wav"]));
 DIE_TALE.forEach(line => FRESH_SAID.push(line));
+/* and the tale of the vessels themselves */
+VESSELS_TALE.forEach((line, i) => QUEEN_VOICE_NAMED.push([line, "Vessels Tale/AQ Vessels Tale " + (i + 1) + ".wav"]));
+VESSELS_TALE.forEach(line => FRESH_SAID.push(line));
 /* and what she says of fairy tales */
 FEY_TALE.forEach((line, i) => QUEEN_VOICE_NAMED.push([line, "Fey Tale/AQ Fey Tale " + (i + 1) + ".wav"]));
 FEY_TALE.forEach(line => FRESH_SAID.push(line));
@@ -19228,7 +19257,7 @@ function flirtAnswer(say, face, gone, heard){
 const GUEST_DOOR = "h7ifl5";
 const GUEST_KEY = unmask("fabaa97a699579b88859e874f77827");
 const GUEST_WORDS = ["YkBGVFQ=", "aU1DWlINJgA2Ew4LVA==", "dFtAQk4xIDs=", "YExLRFg3OB88",
-                     "ZU1DU0khBjc+AQk=", "Y0RAWVkJJDw8GQ==", "Y01OWG4rKDk="].map(unveil);
+                     "ZU1DU0khBjc+AQk=", "Y0RAWVkJJDw8GQ==", "Y01OWG4rKDk=", "d0FdQkgh"].map(unveil);
 const GUEST_AHEAD = 1200;  // ms the cog waits on a word that may yet become one of theirs
 const GUEST_TELLS = [
   "dFtAQk4xIDtmQCYGWVz67+K2",
@@ -19290,6 +19319,8 @@ function doorFor(word){
   const k = keyOf(word);
   if (k === GUEST_DOOR) return guestLet;
   if (GUEST_DOORS[k] && guestOpen(k)) return GUEST_DOORS[k];
+  const sealed = SEALS[deepLock(word)];
+  if (sealed) return sealed;
   /* one of the list answers only once it has been earned */
   const listed = rollFor(word);
   if (listed && !listed.open()) return null;
@@ -20830,7 +20861,13 @@ const GUEST_DOORS = {
 
   "8zh1z1": () => { riteOpen(); },
 
-  te0yxb: () => { glareThrow(); }
+  te0yxb: () => { glareThrow(); },
+
+  "1l94xz8": () => {
+    strikesSet(0);
+    vigilClear();
+    penanceTick();
+  }
 };
 
 /* one of a few pictures, thrown up in a burst of white with a cry played at a pitch of its own -
@@ -20995,14 +21032,14 @@ const DOORS = {
   },
 
   gnn1v8: () => {
-    /* every mark at once, and quietly - thirteen boasts in a row is no gift */
-    try{ localStorage.setItem(BADGE_KEY, JSON.stringify(BADGES.map(b => b.id))); }catch(e){}
+    /* every mark at once, and quietly - thirteen boasts in a row is no gift.
+       what is risen to is left to be risen to */
+    const held = badgesHeld();
+    BADGES.forEach(b => { if (b.id !== RISEN_MARK && held.indexOf(b.id) === -1) held.push(b.id); });
+    try{ localStorage.setItem(BADGE_KEY, JSON.stringify(held)); }catch(e){}
     renderBadges();
     cheatWatch(true);
 
-    STARS.forEach(s => starRise(s.id));
-    starSeenSet(true);
-    renderStars();
     LOGS.forEach(l => logGive(l.id));   /* and every telling of the world, heard */
     aliceSeenSet(true);
     wightSeenSet(true);
@@ -21016,6 +21053,27 @@ const DOORS = {
     cheatWatch(screens.start.classList.contains("on"));
     if (screens.vessels.classList.contains("on")){ renderGuides(); fitAlone(); }
   }};
+
+/* the mark that comes only with all three risen */
+const RISEN_MARK = "b11";
+
+/* doors with no name kept anywhere - only what is left of a word after six passes, and that veiled too */
+const SEALS = {
+  [unveil("EFxKDwp2eg==")]: () => {
+    STARS.forEach(s => starRise(s.id));
+    starSeenSet(true);
+    logGive("colosseum");
+    const held = badgesHeld();
+    if (held.indexOf(RISEN_MARK) === -1){
+      held.push(RISEN_MARK);
+      try{ localStorage.setItem(BADGE_KEY, JSON.stringify(held)); }catch(e){}
+    }
+    renderBadges();
+    renderStars();
+    cheatWatch(screens.start.classList.contains("on"));
+    if (screens.vessels.classList.contains("on")){ renderGuides(); fitAlone(); }
+  }
+};
 
 /* six passes over a typed word. every one of them throws something away,
    so nothing here can be read back into the word that made it */
@@ -21340,7 +21398,18 @@ const RITE_MARK_ART = ["c90af9a5e5c53515c4d7a8d7e5", "c90af9a5f5c53515c4d7a8d7e5
 const RITE_MARKS = [[[3, 1]], [[1, 0.8], [2, 0.2]], [[2, 0.75], [4, 0.25]], [[0, 1]], [], []];
 const RITE_MARK_HEARD = { 1: STRIKE_SOUND };   // the marks that carry a sound of their own
 /* and the tools that carry one, heard on every blow whatever mark it leaves */
-const RITE_TOOL_HEARD = { 2: unmask("ba396aa595e53515c4d7a8d7e5"), 3: unmask("ba396aa5a5e53515c4d7a8d7e5") };
+const RITE_TOOL_HEARD = { 3: unmask("ba396aa5a5e53515c4d7a8d7e5") };
+/* and the ones that say something as they are taken up */
+const RITE_PICK_HEARD = { 2: unmask("ba396aa595e53515c4d7a8d7e5") };
+
+function riteHear(file){
+  if (!file || settings.sound <= 0) return;
+  try{
+    const heard = new Audio(asset(file));
+    heard.volume = Math.max(0, Math.min(1, settings.sound / 100));
+    heard.play().catch(() => {});
+  }catch(err){}
+}
 const RITE_MARK_SIZE = [0.5, 0.3, 0.3, 0.26, 0.32];
 const RITE_TOOL_SCALE = [1, 1, 1.25, 1];   // and the saw's are a quarter larger than the same marks from anything else
 const RITE_REST = 12000;   // left alone this long while still standing, and they begin to mend
@@ -21539,7 +21608,7 @@ function riteBuild(){
     b.type = "button";
     b.className = "rite-b";
     b.textContent = t.name;
-    b.addEventListener("click", () => { riteTool = i; ritePaint(); });
+    b.addEventListener("click", () => { riteTool = i; riteHear(RITE_PICK_HEARD[i]); ritePaint(); });
     tools.appendChild(b);
   });
   look.appendChild(tools);
