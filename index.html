@@ -4406,6 +4406,13 @@ const TALLY_BOTTOM = 3;   // furthest shown
 
 const SPREAD = 2.8;          // how far scores push from the middle
 const CEILING = 1;           // highest a score can read
+/* how far each is drawn toward or away from the people answering, set against how the
+   kingdom's own answers have actually fallen (2026-10-05) */
+const LEAN = {
+  amy: -0.13, knuckles: -0.042, mighty: -0.022, blaze: -0.016, silver: 0.015, baker: 0.002,
+  sonic: 0.022, fang: 0.023, blights: 0, big: 0.01, honey: 0.007, marine: 0.053,
+  tails: 0.033, shadow: 0.015, rouge: 0.01, eggman: 0.03
+};
 /* a score is judged as it is shown - read as a whole percent - so one that shows 100% (or 0%)
    is 100% (or 0%) for every mark and every star that asks for it */
 function scoreFull(s){ return Math.round(s * 100) >= Math.round(CEILING * 100); }
@@ -17065,7 +17072,10 @@ function tally(){
   const reach  = (top - bottom) || 1;
 
   for (const id in TRAITS){
-    const raw = seen[id] ? sum[id] / seen[id] : 0.5;
+    let raw = seen[id] ? sum[id] / seen[id] : 0.5;
+    /* each one's lean - felt most in the middle, and not at all at either end, so a whole
+       answer is still a whole answer */
+    raw += (LEAN[id] || 0) * 4 * raw * (1 - raw);
     const curved = (1 / (1 + Math.exp(-steep * (raw - 0.5))) - bottom) / reach;
     out[id] = low + curved * (CEILING - low);
   }
