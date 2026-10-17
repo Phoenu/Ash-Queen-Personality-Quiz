@@ -18871,6 +18871,10 @@ const STAR_LAST = {
   greed: { line: GREED_LINE, sound: GREED_SAID, eye: null, held: GREED_HELD, tone: "greed" },
   pride: { line: PRIDE_LINE, sound: PRIDE_SAID, eye: null, held: PRIDE_HELD, tone: "pride" }
 };
+const STAR_JEST = {
+  greed: { line: unveil("eEdaFlUlL3IwFElOPFz06//s+sKN3c/s6YO/rIyBg5ZjIw=="), sound: unmask("862ac9a5e5e53515c4d7a8d7e5"),
+           eye: null, held: 8100, tone: "greed" }
+};
 
 /* to a guest, a star not yet risen is a shape in the dark that answers when touched -
    never opened, never shown, only heard, in its own box */
@@ -19452,7 +19456,7 @@ function starHushed(own){
 /* he has the last word on whoever walks away from having been him */
 function wrathSaid(){
   if (!lastVerdict || !lastVerdict.star) return false;
-  const own = STAR_LAST[lastVerdict.star.id];
+  const own = (lastVerdict.given && STAR_JEST[lastVerdict.star.id]) || STAR_LAST[lastVerdict.star.id];
   if (!own) return false;
   return wrathShow(own);
 }
@@ -21233,6 +21237,7 @@ function sideCalm(){
 function sideRisen(s){
   forceStar = s;
   sideWin(s.of);
+  if (lastVerdict && lastVerdict.star) lastVerdict.given = true;
 }
 
 function sideKeep(){
