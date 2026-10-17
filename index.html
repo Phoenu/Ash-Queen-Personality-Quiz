@@ -1981,6 +1981,8 @@
   }
   .side-btn:hover{color:var(--gold);border-color:var(--gold-dim)}
   .side-btn[hidden]{display:none}
+  .side-word{position:fixed;left:0;bottom:0;width:1px;height:1px;padding:0;border:0;opacity:0;font-size:16px;color:transparent;background:transparent;caret-color:transparent;pointer-events:none}
+  #social-who{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
   #side-panel{z-index:460}
   .side-sheet{max-width:340px}
   .side-list{display:flex;flex-direction:column;gap:8px;margin:18px 0 14px}
@@ -7652,8 +7654,8 @@ let sightArmed = false;    /* the next run may be seen through other eyes */
 let sightRun = false;      /* and this one is */
 let sightOn = null;        /* whose eyes, and until when */
 let sightTimer = null;
-let sightKeptArmed = false; /* the next run lends them for good */
-let sightKept = false;      /* and this one does - one face, once chosen, and no other */
+let sightKeptArmed = false;
+let sightKept = false;
 const SIGHT_FOR = 15000;   // how long the borrowed eyes are lent, once a run
 const SIGHT_LATE = 5;      // and when the clock turns red
 let wispSpoke = false;
@@ -12428,7 +12430,7 @@ function doubtDone(){
 /* ---- she will not be answered twice with the same shrug ---- */
 
 let spiteDooming = false;
-let spiteSoft = false;   /* seen without what it costs */
+let spiteSoft = false;
 
 /* counted as each result is given, and acted on if they have sworn to nothing */
 let runBack = false;   /* this result is being put back, not earned */
@@ -12693,7 +12695,6 @@ function spiteSentence(){
       temperSet(0);
       keptClear();
 
-      /* only seen: scorned, then back to the door */
       if (soft){
         spiteOwedSet(false);
         renderGuides();
@@ -16760,7 +16761,6 @@ function sightPaint(){
     [].forEach.call(row.children, b => {
       b.classList.toggle("on", live && b.dataset.id === sightOn.id);
       b.disabled = live && b.dataset.id !== sightOn.id;
-      /* lent for good, the rest go once one is chosen */
       b.hidden = live && sightKept && b.dataset.id !== sightOn.id;
     });
   }
@@ -20962,21 +20962,67 @@ function sideTouch(who){
   sideTyped = "";
 }
 
+function sideHeard(typed){
+  for (let n = 4; n <= typed.length; n++){
+    if (deepLock(typed.slice(-n)) !== SIDE_WORD) continue;
+    sideAt = 0;
+    if (sideHeld()){
+      try{ localStorage.removeItem(SIDE_KEY); }catch(e){}
+      sideOpen(false);
+      sideWear();
+      return true;
+    }
+    try{ localStorage.setItem(SIDE_KEY, "1"); }catch(e){}
+    sideWear();
+    sideOpen(true);
+    return true;
+  }
+  return false;
+}
+
 document.addEventListener("keydown", e => {
   if (!sideAt || Date.now() - sideAt > 30000){ sideAt = 0; return; }
   if (!e.key || e.key.length !== 1) return;
   sideTyped = (sideTyped + e.key.toLowerCase()).slice(-12);
-  for (let n = 4; n <= sideTyped.length; n++){
-    if (deepLock(sideTyped.slice(-n)) !== SIDE_WORD) continue;
-    sideAt = 0;
-    try{ localStorage.setItem(SIDE_KEY, "1"); }catch(e){}
-    sideWear();
-    sideOpen(true);
-    return;
-  }
+  if (sideHeard(sideTyped)) sideTyped = "";
 });
 
-/* its own button, in the corner over everything */
+const SIDE_HOLD = 1000;
+let sideHeldFrom = 0;
+function sideBox(){
+  let box = $("side-word");
+  if (box) return box;
+  box = document.createElement("input");
+  box.id = "side-word";
+  box.className = "side-word";
+  box.type = "text";
+  box.autocomplete = "off";
+  box.setAttribute("autocapitalize", "off");
+  box.setAttribute("autocorrect", "off");
+  box.spellcheck = false;
+  box.setAttribute("aria-hidden", "true");
+  box.tabIndex = -1;
+  box.addEventListener("input", () => {
+    if (sideHeard(box.value.toLowerCase().slice(-12))){ box.value = ""; box.blur(); }
+  });
+  box.addEventListener("keydown", e => e.stopPropagation());
+  box.addEventListener("blur", () => { box.value = ""; });
+  document.body.appendChild(box);
+  return box;
+}
+$("social-who").addEventListener("pointerdown", () => { sideHeldFrom = Date.now(); });
+$("social-who").addEventListener("pointerup", () => {
+  const held = sideHeldFrom && Date.now() - sideHeldFrom >= SIDE_HOLD;
+  sideHeldFrom = 0;
+  const c = CREDITS[socialAt];
+  if (!held || !c || keyOf(String(c.who).toLowerCase()) !== SIDE_WHO) return;
+  const box = sideBox();
+  box.value = "";
+  box.focus({ preventScroll: true });
+});
+$("social-who").addEventListener("pointercancel", () => { sideHeldFrom = 0; });
+$("social-who").addEventListener("contextmenu", e => { if (sideHeldFrom) e.preventDefault(); });
+
 function sideWear(){
   const on = sideHeld();
   let btn = $("side-btn");
@@ -20988,7 +21034,6 @@ function sideWear(){
     btn.textContent = SIDE_SAYS[0];
     btn.setAttribute("aria-expanded", "false");
     btn.addEventListener("click", () => sideOpen(true));
-    /* not an answer to the quiz */
     btn.addEventListener("keydown", e => e.stopPropagation());
     document.body.appendChild(btn);
   }
@@ -21103,7 +21148,6 @@ function sideAway(then){
   setTimeout(then, 320);
 }
 
-/* answered so that it is theirs, whole */
 function sideWin(id){
   trialQuiet();
   release();
@@ -21147,7 +21191,6 @@ function sideMeet(n){
   askWisp(() => { useMusic(null); show("start"); });
 }
 
-/* her last words, with nothing taken */
 function sideTurned(met){
   trialQuiet();
   release();
@@ -21157,7 +21200,6 @@ function sideTurned(met){
   (met ? wispTurns : wispUnmet)(() => { useMusic(null); renderGuides(); show("start"); });
 }
 
-/* without the door or the wight */
 function sideSpite(play, soft){
   trialQuiet();
   release();
@@ -21172,7 +21214,6 @@ function sideScorn(yes){
   penanceTick();
 }
 
-/* let go of, bar what was taken */
 function sideCalm(){
   scornedSet(false);
   temperSet(0);
@@ -21189,13 +21230,11 @@ function sideCalm(){
   penanceTick();
 }
 
-/* their own vessel's full answers, worn as its star */
 function sideRisen(s){
   forceStar = s;
   sideWin(s.of);
 }
 
-/* the faces for the whole of a run - this one, if it is under way, or else the next */
 function sideKeep(){
   if (screens.quiz.classList.contains("on") && !signetOn()){
     sightRun = true;
