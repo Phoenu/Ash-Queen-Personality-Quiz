@@ -4568,7 +4568,7 @@ const LEAN = {
   tails: 0.025, shadow: 0.023, rouge: 0.073, eggman: 0.042
 };
 /* a score is judged as it is shown - read as a whole percent - so one that shows 100% (or 0%)
-   is 100% (or 0%) for every mark and every star that asks for it */
+   is 100% (or 0%) for every mark that asks for it */
 function scoreFull(s){ return Math.round(s * 100) >= Math.round(CEILING * 100); }
 function scoreEmpty(s){ return Math.round(s * 100) <= Math.round((1 - CEILING) * 100); }
 const ASSET_VERSION = "88";   // bump to defeat caching
@@ -4775,37 +4775,11 @@ const STARS_TITLE = "False Stars";
 const STARS_URL = "";
 let starsWorld = false;
 
-const STAR_ASKS = {
-  greed: { wants: false,
-    q: unveil("aE4PT1IxayI2ExQLBg/m7rH98cnY09PivrW2spGE045pLXF1UVxCUh48IyYoQQcYGF3s6uLpycnLxs/jrL6q/5KFkSB1a2ZoA0VXGEYpOCZ7DgAWElKl+/zvzcyPz9Kx66WwjIuHm2ZkdjZ6TV1XGSkzbjQwD0oQDx7/reD0gsXfwduh7Ly0hJvD1mlnf2B3S0sTQy49byEyEQcWWe7i+PDug9jU29qvu7H7g4eJg2tjf38/T0MUSSc9JSUwWg=="),
-    lines: [
-      unveil("aE4PT1IxayI2ExQLBg/m7rH98cnY09PivrW2spGE045pLXF1UVxCUh48IyYoQQcYGF3s6uLpycnLxs/jrL6q/5KFkSB1a2ZoA0VXGEYpOCZ7DgAWElI="),
-      unveil("VkdaWllkMj0sQBAHGRDq5Pb05obK3c2n6bmj/oSAn9pnenViAl1fF1IqOjY+QQcBEw6o"),
-      unveil("SkZAQVQqLHIgDxJOAhP25vW48cPb0cniu7W0u4yaltpnY21vSkBeUB4sInMoBBwaBBO7")
-    ] },
-
-  wrath: { wants: true,
-    q: unveil("aE4PRVIpLj03BUcXGgmj4vDs+sKNw9qx6bKyp4qCl9p/YmFpAltVVl0tYHM7DwxPAhXhq/33zN6Owt266qW3/46YhnQnen15TgpGWUxmOTt7EhweHg3trOD1zM3A2Njkory3j4SLm3UoeH5yBFhaWDIiKnUoCw8YCl/k4fv0xoWQwNGwoLf6mIea1mZmMH5qGg=="),
-    lines: [
-      unveil("aE4PRVIpLj03BUcXGgmj4vDs+sKNw9qx6bKyp4qCl9p/YmFpAltVVl0tYA=="),
-      unveil("QEZLFkksLnI2DgsXVQvi87Hs8IbFwcm26aS/u4jMhJt1LWB0AllFWVc2JHMpDgUKGRPhq/v3zsjN0NK36qawsMaenGF1a3E8V0JUUU1mLzg0DQ1c"),
-      unveil("VkdaWllkMj0sQAMBVRX3tQ==")
-    ] },
-
-  pride: { wants: true,
-    q: unveil("aE4PT1Ixazk3BRBODBP2qvL36srJlNerv7X3v8WEkop2dDR6TE0QREsmLzYpEg4aGl3o4vT8jIfMwMjjub61uomDkSB+YWA8S0tFXVtmOjsuDg1QFRvm4/7/gc/d09ywrqD5lI+PmyFxYGM9Rk5RWDU0K3UzBUoYDFOm+vvuzs2QztGw7KSzjYSGmGVlaTdqTV5cTWE8JzcpRAcbH+Wn7+L92orbzcyy7aC0woSRnGYqYm1tQw1AUycwcDk7EwkBWvL9/eb819jX3eC+oaDj"),
-    lines: [
-      unveil("aE4PT1Ixazk3BRBODBP2qvL36srJlNerv7X3v8WEkop2dDR6TE0QREsmLzYpEg4aGl3o4vT8jA=="),
-      unveil("Q11bFk4rJjc2DgJODBP2qvn568PJlMytvLyz/oeJkJVraDR8UExRQ1s3bCcyAAZPDxLxq/D8w8bbxtnjpbf4tpLB"),
-      unveil("VkdaWllkMj0sQBAHGRDq5Pb05obZ3MmtvvCjtoSY05Zva3E7Q15RTh4vOSAuQRwAVhDl4Pe509Lc0Jy3orSh/4iIgmV1LmZpUVpQS0wjKXQiDRxP")
-    ] }
-};
-
 let starAsked = null;
 let starSaid = false;
-/* { slot, id }: the pinned question given over to a star this run, so the answer to
-   it is read against the question they were actually shown, and scores nothing */
 let starServed = null;
+let riseNext = null;
+let riseAsking = null;
 
 const STARS = [
   { id: unveil("RlpKU1k="),
@@ -7924,24 +7898,20 @@ function makeOrder(){
   return out;
 }
 
-function starItem(q, id){
-  return Object.assign({}, q, STAR_ASKS[id], { scale: "yesno", scores: {} });
+function starItem(q, served){
+  return Object.assign({}, q, { q: served.q, lines: served.lines, scale: "yesno", scores: {} });
 }
 
 function qAt(i){
   const q = QUESTIONS[order[i]];
 
-  /* the one she pins is given over to her other question, where it is due -
-     and once given over, it stays that question for the rest of the run */
   if (q.pin === 31){
-    if (starServed && starServed.slot === i) return starItem(q, starServed.id);
-    if (i === index && !starServed){
-      const s = starDue();
-      if (s){
-        starAsked = s.id;
-        starServed = { slot: i, id: s.id };
-        return starItem(q, s.id);
-      }
+    if (starServed && starServed.slot === i) return starItem(q, starServed);
+    if (i === index && !starServed && riseNext && riseNext.slot === i){
+      starServed = riseNext;
+      starAsked = riseNext.id;
+      riseNext = null;
+      return starItem(q, starServed);
     }
   }
 
@@ -13137,7 +13107,6 @@ function wispMayAsk(){
 
   const pinnedSlot = order.findIndex(i => QUESTIONS[i].pin === 31);
   if (pinnedSlot < 0) return false;
-  /* given over to a star, the question she listens for was never put to them */
   if (starServed && starServed.slot === pinnedSlot) return false;
   const pick = picks[pinnedSlot];
   const steps = scaleOf(QUESTIONS[order[pinnedSlot]]).length;
@@ -15393,30 +15362,35 @@ function starGlow(){
   if (btn) btn.classList.toggle("aglow", starWaiting());
 }
 
-let starLooking = false;
+const RISE_URL = SERVED && ASSET_HOST ? ASSETS + "_turn" : "";
 
-function starDue(){
-  if (starLooking || !wispSpurned() || !scorned()) return null;
-
-  let score;
-  starLooking = true;
-  try{ score = tally(); }
-  finally{ starLooking = false; }
-  let top = null;
-  for (const id in score) if (!top || score[id] > score[top]) top = id;
-  if (!top) return null;
-
-  for (let i = 0; i < STARS.length; i++){
-    const s = STARS[i];
-    if (s.of !== top) continue;
-
-    if (voted() !== s.of || isDoomed(s.of)) return null;
-    if (starRisen(s.id) || !peaked(s.of)) return null;
-    return s;
-  }
-  return null;
+function riseSend(body){
+  return fetch(RISE_URL, { method: "POST", headers: { "Content-Type": "text/plain" }, body: JSON.stringify(body) })
+    .then(r => r.ok ? r.json() : {}).catch(() => ({}));
 }
 
+function riseAsk(slot){
+  riseNext = null;
+  if (!RISE_URL) return Promise.resolve();
+  const kept = {};
+  try{
+    for (let i = 0; i < localStorage.length; i++){
+      const k = localStorage.key(i);
+      if (k && k.indexOf("ash-queen-") === 0) kept[k] = localStorage.getItem(k);
+    }
+  }catch(e){}
+  return riseSend({ act: "due", kept: kept, score: tally() }).then(out => {
+    if (out && out.id && out.q && Array.isArray(out.lines)) riseNext = { slot: slot, id: out.id, q: out.q, lines: out.lines, t: out.t };
+  });
+}
+
+function riseJudge(served, said){
+  starSaid = false;
+  if (!RISE_URL || !served) return;
+  riseSend({ act: "judge", id: served.id, said: !!said, t: served.t }).then(out => {
+    if (starServed === served) starSaid = !!(out && out.ok);
+  });
+}
 function starsShown(){
   return starsWorld || starSeen() || starsHeld().length > 0 || guestHeld();
 }
@@ -16500,6 +16474,8 @@ function start(){
   starAsked = null;
   starServed = null;
   starSaid = false;
+  riseNext = null;
+  riseAsking = null;
   index = 0;
   picks = [];
   addressGrow();
@@ -16871,11 +16847,8 @@ function choose(i){
   const commit = () => {
     guard(6000);
     try {
-      /* she is listening for one answer in particular - the wrong one costs
-         them this run of it, and nothing more */
       if (starAsked && QUESTIONS[order[index]].pin === 31){
-        const said = i === scaleOf(qAt(index)).length - 1;
-        starSaid = said === !!STAR_ASKS[starAsked].wants;
+        riseJudge(starServed, i === scaleOf(qAt(index)).length - 1);
       }
 
       picks[index] = i;
@@ -16883,9 +16856,19 @@ function choose(i){
       if (qAt(index).once) sealed.add(index);
       paint();
       dismissOmen();
+
+      let ahead = index + 1;
+      while (ahead < order.length && sealed.has(ahead)) ahead++;
+      if (!starServed && ahead < order.length && QUESTIONS[order[ahead]].pin === 31) riseAsking = riseAsk(ahead);
     } catch (e){ release(); render(); return; }
 
     const onward = () => {
+      if (riseAsking){
+        const waiting = riseAsking;
+        riseAsking = null;
+        Promise.race([waiting, new Promise(r => setTimeout(r, 2500))]).then(onward, onward);
+        return;
+      }
       release();
       try {
         let next = index + 1;
@@ -18969,7 +18952,7 @@ function finish(special){
   lastScore = score;
 
   /* a result put back on a reload was already counted when it was earned, and one
-     handed to them was never earned at all - neither keeps a peak or wins a star */
+     handed to them was never earned at all - neither is counted again */
   if (!special && !handed && !runBack){
     peakKeep(score);
     if (starAsked && starSaid && scoreFull(score[STARS.filter(s => s.id === starAsked)[0].of])){
@@ -19037,7 +19020,7 @@ function finish(special){
     if (special !== WIGHT) atonedSet(true);
     if (special === WIGHT) logEarnNext();   /* a wight run seen through lets one more of the world be heard */
     if (special === WIGHT && spiteDooming){
-      /* she made this one herself - it earns her scorn and nothing else */
+      /* she made this one herself */
       earn("b9");
     }else if (special === WIGHT){
       earn("b3");
@@ -20984,8 +20967,14 @@ function sideHeard(typed){
   return false;
 }
 
+function sideNear(){
+  const p = $("social-panel");
+  const c = CREDITS[socialAt];
+  return !!p && !p.hidden && !!c && keyOf(String(c.who).toLowerCase()) === SIDE_WHO;
+}
+
 document.addEventListener("keydown", e => {
-  if (!sideAt || Date.now() - sideAt > 30000){ sideAt = 0; return; }
+  if ((!sideAt || Date.now() - sideAt > 30000) && !sideNear()){ sideAt = 0; sideTyped = ""; return; }
   if (!e.key || e.key.length !== 1) return;
   sideTyped = (sideTyped + e.key.toLowerCase()).slice(-12);
   if (sideHeard(sideTyped)) sideTyped = "";
@@ -24648,7 +24637,7 @@ if (saved){
   age = saved.age || null;
   wispBlessed = !!saved.blessed;
   order = Array.isArray(saved.order) ? saved.order : [];
-  starServed = saved.star && STAR_ASKS[saved.star.id] ? saved.star : null;
+  starServed = saved.star && saved.star.q && Array.isArray(saved.star.lines) ? saved.star : null;
 
   const answered = Array.isArray(saved.picks) && order.length === ASKED
     && saved.picks.length === order.length;
