@@ -24,13 +24,13 @@
 <meta name="twitter:image" content="https://phoenu.github.io/Ash-Queen-Personality-Quiz/assets/Ash%20Queen%20Icons/crest.png">
 <meta name="theme-color" content="#000000">
 <title>Soul Quiz</title>
-<style>html,body{margin:0;background:#000}#wait{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#b9a6c9;font:15px/1.5 Georgia,serif}</style>
+<style>body{margin:0;background:#000}#wait{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;padding:24px;text-align:center;color:#b9a6c9;font:15px/1.5 Georgia,serif}</style>
 </head>
 <body>
 <div id="wait"></div>
 <script>
 (function () {
-  var at = "https://ash-queen-assets.danielpava01.workers.dev/Misc/35776abe92c67578.txt?v=35776abe92c67578", back = [126,76,111,40,92,57,86,46,124,39,73,118,83,99,43,78,55,113,117,101,41,81,54,45,119,115,35,47,108,70,96,122,34,44,89,49,100,90,75,33,42,59,102,85,107,79,37,82,77,121,123,95,71,58,74,63,51,93,50,103,56,65,60,69,64,80,116,66,38,120,110,97,52,114,84,104,109,98,62,53,105,67,88,112,72,32,68,91,87,48,125,36,61,106,94], wait = document.getElementById("wait");
+  var at = "https://ash-queen-assets.danielpava01.workers.dev/Misc/ee9eecd471da25fb.txt?v=ee9eecd471da25fb", back = [55,118,56,41,71,96,35,94,48,68,62,75,104,103,59,90,87,100,89,93,42,69,76,122,51,47,115,45,126,88,70,37,38,57,99,49,40,92,46,34,82,50,111,119,73,91,110,32,64,33,65,74,60,52,116,105,72,61,112,53,109,108,95,84,125,54,66,78,36,39,77,117,86,85,44,114,79,83,81,80,63,113,106,123,58,124,98,107,67,120,97,102,101,121,43], wait = document.getElementById("wait");
   fetch(at).then(function (r) { if (!r.ok) throw 0; return r.text(); }).then(function (t) {
     var out = new Array(t.length);
     for (var i = 0; i < t.length; i++) { var c = t.charCodeAt(i); out[i] = c >= 32 && c <= 126 ? String.fromCharCode(back[c - 32]) : t.charAt(i); }
